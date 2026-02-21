@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://doc_view"]
+
+[ext_resource type="Script" path="res://scenes/game_day/document_view.gd" id="1"]
+
+[node name="DocumentView" type="Control"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="DocTabs" type="HBoxContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="DocContent" type="PanelContainer" parent="VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DocMargin" type="MarginContainer" parent="VBox/DocContent"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="DocVBox" type="VBoxContainer" parent="VBox/DocContent/DocMargin"]
+layout_mode = 2
+
+[node name="DocTitleLabel" type="Label" parent="VBox/DocContent/DocMargin/DocVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.15, 0.1, 1)
+theme_override_font_sizes/font_size = 14
+text = "BELGE"
+horizontal_alignment = 1
+
+[node name="Sep" type="HSeparator" parent="VBox/DocContent/DocMargin/DocVBox"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox/DocContent/DocMargin/DocVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DocContentLabel" type="RichTextLabel" parent="VBox/DocContent/DocMargin/DocVBox/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.15, 0.12, 0.1, 1)
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = false
+text = ""
+fit_content = true
+
+[node name="PaperOverlay" type="ColorRect" parent="VBox/DocContent"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.85, 0.82, 0.75, 1)

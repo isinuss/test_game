@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://char_sprite"]
+
+[ext_resource type="Script" path="res://scenes/game_day/character_sprite.gd" id="1"]
+
+[node name="CharacterSprite" type="Control"]
+custom_minimum_size = Vector2(64, 96)
+layout_mode = 2
+script = ExtResource("1")
