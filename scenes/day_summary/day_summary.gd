@@ -1,5 +1,6 @@
 extends Control
 ## End-of-day summary screen. Shows decisions, violations, money.
+## Uses screen transitions for scene changes.
 
 @onready var title_label: Label = %TitleLabel
 @onready var results_container: VBoxContainer = %ResultsContainer
@@ -16,11 +17,22 @@ func _populate() -> void:
 		summary = {}
 
 	var day: int = summary.get("day", GameManager.current_day)
-	title_label.text = "GÜN %d — RAPOR" % day
+
+	# Title with typewriter
+	var full_title: String = "GÜN %d — RAPOR" % day
+	title_label.text = ""
+	var title_tween: Tween = create_tween()
+	title_tween.tween_interval(0.3)
+	for i in range(full_title.length()):
+		var idx: int = i + 1
+		title_tween.tween_callback(func() -> void:
+			title_label.text = full_title.substr(0, idx)
+		)
+		title_tween.tween_interval(0.03)
 
 	# Show each decision
 	var decisions: Array = summary.get("decisions", [])
-	var line_delay: float = 0.0
+	var line_delay: float = 0.6
 	for decision: Variant in decisions:
 		if decision is not Dictionary:
 			continue
@@ -49,12 +61,14 @@ func _populate() -> void:
 
 		lbl.add_theme_font_size_override("font_size", 12)
 		lbl.modulate.a = 0.0
+		lbl.position.x = -10.0
 		results_container.add_child(lbl)
 
-		# Animate each line appearing
+		# Animate each line appearing with slide
 		var tween: Tween = create_tween()
 		tween.tween_interval(line_delay)
 		tween.tween_property(lbl, "modulate:a", 1.0, 0.3)
+		tween.parallel().tween_property(lbl, "position:x", 0.0, 0.3).set_ease(Tween.EASE_OUT)
 		line_delay += 0.4
 
 	# Summary stats
@@ -86,9 +100,13 @@ func _populate() -> void:
 
 	# Show continue button after all animations
 	continue_button.modulate.a = 0.0
+	continue_button.disabled = true
 	var btn_tween: Tween = create_tween()
 	btn_tween.tween_interval(line_delay + 1.5)
 	btn_tween.tween_property(continue_button, "modulate:a", 1.0, 0.3)
+	btn_tween.tween_callback(func() -> void:
+		continue_button.disabled = false
+	)
 
 	if GameManager.violations >= GameManager.max_violations or GameManager.current_day >= GameManager.max_days:
 		continue_button.text = "SONUÇ"
@@ -96,8 +114,9 @@ func _populate() -> void:
 		continue_button.text = "SONRAKİ GÜN →"
 
 func _on_continue() -> void:
+	continue_button.disabled = true
 	GameManager.advance_day()
 	if GameManager.state == GameManager.GameState.GAME_OVER:
-		get_tree().change_scene_to_file("res://scenes/ending/ending.tscn")
+		ScreenTransition.transition_to("res://scenes/ending/ending.tscn", 0.6, 0.8)
 	else:
-		get_tree().change_scene_to_file("res://scenes/day_briefing/day_briefing.tscn")
+		ScreenTransition.transition_to("res://scenes/day_briefing/day_briefing.tscn")

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://booth_view"]
+[gd_scene load_steps=4 format=3 uid="uid://booth_view"]
 
 [ext_resource type="Script" path="res://scenes/game_day/booth_view.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/game_day/character_sprite.gd" id="2"]
+[ext_resource type="Script" path="res://scenes/game_day/dust_particles.gd" id="3"]
 
 [node name="BoothView" type="Control"]
 custom_minimum_size = Vector2(960, 270)
@@ -256,6 +257,7 @@ offset_left = 235.0
 offset_top = 58.0
 offset_right = 237.0
 offset_bottom = 66.0
+pivot_offset = Vector2(1, 8)
 color = Color(0.15, 0.12, 0.1, 1)
 
 [node name="ClockHandM" type="ColorRect" parent="."]
@@ -264,6 +266,7 @@ offset_left = 236.0
 offset_top = 65.0
 offset_right = 244.0
 offset_bottom = 67.0
+pivot_offset = Vector2(0, 1)
 color = Color(0.15, 0.12, 0.1, 1)
 
 [node name="DeadPlant" type="ColorRect" parent="."]
@@ -377,6 +380,16 @@ anchor_bottom = 0.95
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.25, 0.2, 0.14, 1)
+
+[node name="DustParticles" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3")
 
 [node name="StatusBar" type="HBoxContainer" parent="."]
 layout_mode = 1

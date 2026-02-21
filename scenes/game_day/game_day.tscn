@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://game_day"]
+[gd_scene load_steps=7 format=3 uid="uid://game_day"]
 
 [ext_resource type="Script" path="res://scenes/game_day/game_day.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://booth_view" path="res://scenes/game_day/booth_view.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://doc_view" path="res://scenes/game_day/document_view.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://directive_panel" path="res://scenes/game_day/directive_panel.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://stamp_area" path="res://scenes/game_day/stamp_area.tscn" id="5"]
+[ext_resource type="Script" path="res://scenes/game_day/stamp_overlay.gd" id="6"]
 
 [node name="GameDay" type="Control"]
 layout_mode = 3
@@ -71,3 +72,13 @@ color = Color(0.3, 0.25, 0.2, 1)
 [node name="StampArea" parent="SplitVBox/DeskArea" instance=ExtResource("5")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="StampOverlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6")

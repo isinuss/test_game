@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.3", "GL Compatibility")
 
 EventBus="*res://autoload/event_bus.gd"
 GameManager="*res://autoload/game_manager.gd"
+ScreenTransition="*res://autoload/screen_transition.tscn"
 
 [display]
 

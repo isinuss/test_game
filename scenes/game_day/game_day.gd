@@ -103,12 +103,16 @@ func _check_day_start_events() -> void:
 			_show_event_popup(event)
 
 func _show_event_popup(event: Dictionary) -> void:
-	# Create a simple modal popup
+	# Create a simple modal popup with fade-in
 	var overlay: ColorRect = ColorRect.new()
-	overlay.color = Color(0, 0, 0, 0.7)
+	overlay.color = Color(0, 0, 0, 0)
 	overlay.anchors_preset = Control.PRESET_FULL_RECT
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+
+	# Fade in overlay
+	var overlay_tween: Tween = create_tween()
+	overlay_tween.tween_property(overlay, "color:a", 0.7, 0.3)
 
 	var panel: PanelContainer = PanelContainer.new()
 	panel.anchors_preset = Control.PRESET_CENTER
@@ -117,7 +121,16 @@ func _show_event_popup(event: Dictionary) -> void:
 	panel.offset_top = -150
 	panel.offset_right = 250
 	panel.offset_bottom = 150
+	# Pop-in animation
+	panel.scale = Vector2(0.8, 0.8)
+	panel.modulate.a = 0.0
+	panel.pivot_offset = Vector2(250, 150)
 	overlay.add_child(panel)
+
+	var panel_tween: Tween = create_tween()
+	panel_tween.tween_interval(0.2)
+	panel_tween.tween_property(panel, "modulate:a", 1.0, 0.2)
+	panel_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
@@ -164,9 +177,17 @@ func _show_event_popup(event: Dictionary) -> void:
 			if flag_key != "":
 				GameManager.set_flag(flag_key, choice_data.get("value", true))
 			EventBus.event_choice_made.emit(ev_id, i)
-			overlay.queue_free()
+			# Fade out popup
+			var close_tween: Tween = create_tween()
+			close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+			close_tween.tween_callback(func() -> void: overlay.queue_free())
 		)
+		# Stagger button appearance
+		btn.modulate.a = 0.0
 		inner_vbox.add_child(btn)
+		var btn_tween: Tween = create_tween()
+		btn_tween.tween_interval(0.5 + i * 0.15)
+		btn_tween.tween_property(btn, "modulate:a", 1.0, 0.2)
 
 func _present_next_candidate() -> void:
 	if _day_over:
@@ -240,4 +261,4 @@ func _end_day() -> void:
 	# Store summary for the summary screen to read
 	GameManager.set_flag("_last_summary", summary)
 	await get_tree().create_timer(1.5).timeout
-	get_tree().change_scene_to_file("res://scenes/day_summary/day_summary.tscn")
+	ScreenTransition.transition_to("res://scenes/day_summary/day_summary.tscn")
