@@ -88,6 +88,18 @@ const GREETINGS: Array[String] = [
 	"Merhaba, ilanınızı gördüm ve başvurdum.",
 	"İyi günler, sizinle görüşmek istiyordum.",
 	"Hoş buldum, başvurum için geldim.",
+	"Merhaba, randevum vardı. Doğru yere geldim, değil mi?",
+	"İyi günler. Aşağıda yönlendirdiler beni buraya.",
+	"Merhaba, geç kalmadım inşallah. Trafik biraz sıkıştırdı.",
+	"Günaydın. Başvurumu geçen hafta yapmıştım, çağırdınız.",
+	"Merhaba. Dışarıda biraz bekledim, sıra bana gelmiş galiba.",
+	"İyi günler. Müsaitseniz başvurumu değerlendirmek istiyordum.",
+	"Merhaba, ilk defa geliyorum bu binaya. Epey büyükmüş.",
+	"Selam. Güvenlikten zor geçtim, kimliksiz almıyorlarmış.",
+	"İyi günler. Daha önce de başvurmuştum, bu sefer dönüş aldım.",
+	"Merhaba, biraz heyecanlıyım açıkçası.",
+	"İyi günler, otobüsü zor yakaladım ama yetiştim.",
+	"Merhaba. Referansım yönlendirdi, boş pozisyon var dedi.",
 ]
 
 const HIRED_REACTIONS: Array[String] = [
@@ -96,6 +108,15 @@ const HIRED_REACTIONS: Array[String] = [
 	"Gerçekten mi? Çok sevindim!",
 	"Teşekkürler, elimden gelenin en iyisini yapacağım.",
 	"Müthiş! Sabırsızlanıyorum başlamak için.",
+	"Sağ olun, pişman etmem sizi.",
+	"Çok teşekkürler. Altı aydır bekliyordum bu haberi.",
+	"İyi ki gelmişim bugün. Çok teşekkürler.",
+	"Güzel haber... Ailem de çok sevinecek.",
+	"Teşekkürler. Yarın başlayabilir miyim?",
+	"Sonunda bir kapı açıldı. Sağ olun.",
+	"Allah razı olsun. Hakkınızı helal edin.",
+	"Sahi mi? Bugün şanslı günümmüş demek ki.",
+	"Çok memnun oldum. İnşallah hayırlısı olur.",
 ]
 
 const REJECTED_REACTIONS: Array[String] = [
@@ -104,6 +125,47 @@ const REJECTED_REACTIONS: Array[String] = [
 	"Ama neden? Bence çok uygunum!",
 	"Hayal kırıklığı... Neyse, iyi günler.",
 	"Tamam... Başka kapılar da var.",
+	"Peki, sağ olun zamanınız için.",
+	"Anladım. Kolay gelsin.",
+	"Beklemiyordum bunu ama... tamam.",
+	"Alışkınım artık. İyi günler.",
+	"En azından yüzüme söylediniz, teşekkürler.",
+	"Hayırlısı diyelim o zaman.",
+	"Bir şans daha veremez misiniz? ...Peki.",
+	"Bu kadar mı yani? Anladım, iyi günler.",
+	"Saygı duyuyorum kararınıza. Hoşça kalın.",
+]
+
+const INTERVIEW_EXTRAS: Array[String] = [
+	"Bu pozisyon tam aradığım şey, uzun zamandır böyle bir fırsat bekliyordum.",
+	"Önceki işimden kendi isteğimle ayrıldım, sebebini sorarsanız anlatabilirim.",
+	"Takım çalışmasına önem veririm ama tek başıma da çalışabilirim.",
+	"Maaş beklentimi sormayacak mısınız?",
+	"Referanslarıma ulaşabilirsiniz, hepsi olumlu.",
+	"Dürüst olmak gerekirse, bu sektöre yeni geçiş yapıyorum.",
+	"Biraz heyecanlıyım, kusura bakmayın.",
+	"Özgeçmişim belki çok parlak değil ama çalışkanımdır.",
+	"Bana bir şans verin, farkı görürsünüz.",
+	"Esnek çalışma saatleriniz olduğunu duydum, doğru mu?",
+	"Önceki işimde çok fazla mesai yapıyordum. Burada nasıl?",
+	"Kariyer hedefim bu alanda uzmanlaşmak.",
+	"İngilizce seviyem iyi, gerekirse yurt dışıyla da çalışırım.",
+	"Uzun vadeli düşünüyorum, sık iş değiştirmeyi sevmem.",
+	"Staj dönemimde çok şey öğrendim, asıl tecrübem orada başladı.",
+	"Belgelerimde her şey yazıyor ama sormak istediğiniz varsa buyrun.",
+	"Önceki müdürüm iyi referans verir, arayabilirsiniz.",
+	"Bu şehre yeni taşındım, burada kalıcı bir iş arıyorum.",
+]
+
+const DOCUMENT_HANDOVERS: Array[String] = [
+	"Buyrun, belgelerim burada.",
+	"İşte dosyam, her şey tamam olmalı.",
+	"Belgelerimi getirdim, buyrun.",
+	"Hazırladım her şeyi, buyrun.",
+	"Dosyamı bırakıyorum, eksik varsa söyleyin.",
+	"Buyrun, CV ve diplomam burada.",
+	"Her şeyi bir dosyada topladım, buyrun.",
+	"İşte, belgeler hazır.",
 ]
 
 static func generate_tc_kimlik(valid: bool = true) -> String:
@@ -201,12 +263,21 @@ static func generate_candidate(seed_val: int, day: int) -> CandidateData:
 	c.reaction_hired = HIRED_REACTIONS[rng.randi() % HIRED_REACTIONS.size()]
 	c.reaction_rejected = REJECTED_REACTIONS[rng.randi() % REJECTED_REACTIONS.size()]
 
-	# Interview lines
+	# Interview lines: factual + 1-2 personality extras
 	c.interview_lines = [
 		str(c.experience_years) + " yıldır bu alanda çalışıyorum.",
 		c.university + " mezunuyum.",
 		c.position_applied + " pozisyonuna başvurdum.",
 	]
+	var num_extras: int = rng.randi_range(1, 2)
+	var shuffled_extras: Array[String] = INTERVIEW_EXTRAS.duplicate()
+	for i in range(shuffled_extras.size() - 1, 0, -1):
+		var j: int = rng.randi() % (i + 1)
+		var tmp: String = shuffled_extras[i]
+		shuffled_extras[i] = shuffled_extras[j]
+		shuffled_extras[j] = tmp
+	for i in range(mini(num_extras, shuffled_extras.size())):
+		c.interview_lines.append(shuffled_extras[i])
 
 	# Generate documents
 	_generate_documents(c)

@@ -55,7 +55,8 @@ func _show_greeting() -> void:
 
 func _on_receive_pressed() -> void:
 	receive_button.visible = false
-	_show_speech("Buyrun, belgelerim burada...")
+	var handover: String = CandidatePool.DOCUMENT_HANDOVERS[randi() % CandidatePool.DOCUMENT_HANDOVERS.size()]
+	_show_speech(handover)
 	# Brief hand animation
 	var orig_x: float = character.position.x
 	var tween: Tween = create_tween()
