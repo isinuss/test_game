@@ -14,7 +14,7 @@ var expression: int = 0  # 0=neutral, 1=happy, 2=sad
 var is_blinking: bool = false
 
 # Pixel scale: each "pixel" in the character is this many actual pixels
-const PX: float = 3.0
+const PX: float = 6.0
 # Character width/height in character-pixels
 const CHAR_W: int = 16
 const CHAR_H: int = 24
