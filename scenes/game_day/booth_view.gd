@@ -33,6 +33,8 @@ var _glow_base_alpha: float = 0.3
 # Typewriter speech
 var _typewriter_tween: Tween = null
 var _full_speech_text: String = ""
+var _mumble_timer: float = 0.0
+var _is_speaking: bool = false
 
 # Character idle sway
 var _idle_time: float = 0.0
@@ -59,6 +61,14 @@ func _process(delta: float) -> void:
 
 	# Clock animation
 	_process_clock(delta)
+
+	# Character mumble during speech
+	if _is_speaking:
+		_mumble_timer -= delta
+		if _mumble_timer <= 0.0:
+			_mumble_timer = randf_range(0.2, 0.4)
+			var seed_val: int = _current_candidate.photo_seed if _current_candidate else randi()
+			AudioManager.play_mumble(seed_val + randi_range(0, 100), randf_range(0.1, 0.2))
 
 	# Idle character sway
 	if _character_arrived and _current_candidate != null:
@@ -219,6 +229,8 @@ func _show_speech(text: String) -> void:
 	_full_speech_text = text
 	speech_label.text = ""
 	speech_panel.visible = true
+	_is_speaking = true
+	_mumble_timer = 0.05
 
 	# Pop-in animation for speech panel
 	speech_panel.scale = Vector2(0.8, 0.8)
@@ -239,8 +251,13 @@ func _show_speech(text: String) -> void:
 			speech_label.text = _full_speech_text.substr(0, idx)
 		)
 		_typewriter_tween.tween_interval(char_delay)
+	_typewriter_tween.tween_callback(func() -> void:
+		_is_speaking = false
+	)
 
 func _hide_speech() -> void:
+	_is_speaking = false
+	AudioManager.stop_mumble()
 	if _typewriter_tween and _typewriter_tween.is_valid():
 		_typewriter_tween.kill()
 	# Quick fade out

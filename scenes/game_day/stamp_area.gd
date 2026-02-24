@@ -38,6 +38,7 @@ func _on_hire() -> void:
 		return
 	set_buttons_enabled(false)
 	_play_stamp_animation(hire_button)
+	AudioManager.play_sfx("stamp_hire")
 	status_label.text = "İŞE ALINDI"
 	status_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.2))
 	_show_stamp_overlay(true)
@@ -49,6 +50,7 @@ func _on_reject() -> void:
 		return
 	set_buttons_enabled(false)
 	_play_stamp_animation(reject_button)
+	AudioManager.play_sfx("stamp_reject")
 	status_label.text = "REDDEDİLDİ"
 	status_label.add_theme_color_override("font_color", Color(0.7, 0.15, 0.1))
 	_show_stamp_overlay(false)
@@ -99,6 +101,8 @@ func _screen_shake(intensity: float, duration: float) -> void:
 	tween.tween_property(game_day, "position", original_pos, step_time)
 
 func show_result(correct: bool, reason: String) -> void:
+	if correct:
+		AudioManager.play_sfx("money")
 	if not correct:
 		status_label.text += "\n⚠ İHLAL: " + reason
 		status_label.add_theme_color_override("font_color", Color(0.9, 0.3, 0.1))
@@ -110,6 +114,7 @@ func show_result(correct: bool, reason: String) -> void:
 		tween.tween_property(status_label, "modulate", Color.WHITE, 0.1)
 		tween.tween_property(status_label, "modulate", Color(1, 0.2, 0.2), 0.1)
 		tween.tween_property(status_label, "modulate", Color.WHITE, 0.15)
+		AudioManager.play_sfx("violation")
 		# Extra screen shake for violation
 		_screen_shake(8.0, 0.3)
 

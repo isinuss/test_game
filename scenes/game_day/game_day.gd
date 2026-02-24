@@ -6,6 +6,7 @@ extends Control
 @onready var document_view: Control = %DocumentView
 @onready var directive_panel: PanelContainer = %DirectivePanel
 @onready var stamp_area: Control = %StampArea
+@onready var drawer_panel: Control = %DrawerPanel
 
 var _waiting_for_next: bool = false
 var _day_over: bool = false
@@ -32,6 +33,15 @@ func _ready() -> void:
 	directive_panel.load_directives(GameManager.current_day)
 	stamp_area.stamp_pressed.connect(_on_stamp_decision)
 	EventBus.documents_received.connect(_on_documents_received)
+
+	# Drawer button
+	var drawer_btn: Button = directive_panel.find_child("DrawerButton", true, false)
+	if drawer_btn:
+		drawer_btn.pressed.connect(_on_drawer_pressed)
+
+	# Audio: stop menu music, start office ambient
+	AudioManager.stop_music()
+	AudioManager.play_ambient()
 
 	# Check for day-start events
 	_check_day_start_events()
@@ -173,6 +183,7 @@ func _show_event_popup(event: Dictionary) -> void:
 		var choice_data: Dictionary = choice
 		var ev_id: String = event.get("id", "")
 		btn.pressed.connect(func() -> void:
+			AudioManager.play_sfx("ui_click")
 			var flag_key: String = choice_data.get("flag", "")
 			if flag_key != "":
 				GameManager.set_flag(flag_key, choice_data.get("value", true))
@@ -255,7 +266,12 @@ func _check_day_end_events() -> void:
 			if event.get("trigger", "") == "day_end":
 				_show_event_popup(event)
 
+func _on_drawer_pressed() -> void:
+	AudioManager.play_sfx("ui_click")
+	drawer_panel.show_drawer(GameManager.current_day)
+
 func _end_day() -> void:
+	AudioManager.stop_ambient()
 	stamp_area.set_buttons_enabled(false)
 	var summary: Dictionary = GameManager.end_day()
 	# Store summary for the summary screen to read

@@ -10,6 +10,7 @@ func _ready() -> void:
 	menu_button.pressed.connect(_on_menu)
 	menu_button.modulate.a = 0.0
 	menu_button.disabled = true
+	AudioManager.play_music()
 	_show_ending()
 
 func _show_ending() -> void:
@@ -75,6 +76,7 @@ func _show_ending() -> void:
 	)
 
 func _on_menu() -> void:
+	AudioManager.play_sfx("ui_click")
 	menu_button.disabled = true
 	GameManager.state = GameManager.GameState.MENU
 	ScreenTransition.transition_to("res://scenes/main_menu/main_menu.tscn", 0.8, 0.6)

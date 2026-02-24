@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://game_day"]
+[gd_scene load_steps=8 format=3 uid="uid://game_day"]
 
 [ext_resource type="Script" path="res://scenes/game_day/game_day.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://booth_view" path="res://scenes/game_day/booth_view.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://directive_panel" path="res://scenes/game_day/directive_panel.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://stamp_area" path="res://scenes/game_day/stamp_area.tscn" id="5"]
 [ext_resource type="Script" path="res://scenes/game_day/stamp_overlay.gd" id="6"]
+[ext_resource type="Script" path="res://scenes/game_day/drawer_panel.gd" id="7"]
 
 [node name="GameDay" type="Control"]
 layout_mode = 3
@@ -82,3 +83,15 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6")
+
+[node name="DrawerPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7")

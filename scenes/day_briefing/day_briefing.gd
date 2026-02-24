@@ -94,5 +94,6 @@ func _populate() -> void:
 	)
 
 func _on_start_pressed() -> void:
+	AudioManager.play_sfx("ui_click")
 	start_button.disabled = true
 	ScreenTransition.transition_to("res://scenes/game_day/game_day.tscn")

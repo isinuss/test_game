@@ -23,6 +23,9 @@ func _ready() -> void:
 	footer_label.modulate.a = 0.0
 
 	_animate_intro()
+	# Start ambient music after a brief delay
+	await get_tree().create_timer(1.0).timeout
+	AudioManager.play_music()
 
 func _animate_intro() -> void:
 	# Title fades in with slight scale
@@ -78,10 +81,12 @@ func _do_title_flicker() -> void:
 	tween.tween_property(title_label, "modulate:a", 1.0, 0.05)
 
 func _on_start_pressed() -> void:
+	AudioManager.play_sfx("ui_click")
 	start_button.disabled = true
 	quit_button.disabled = true
 	GameManager.start_new_game()
 	ScreenTransition.transition_to("res://scenes/day_briefing/day_briefing.tscn")
 
 func _on_quit_pressed() -> void:
+	AudioManager.play_sfx("ui_click")
 	get_tree().quit()

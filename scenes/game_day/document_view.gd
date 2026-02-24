@@ -22,6 +22,7 @@ func _ready() -> void:
 	content_panel.visible = false
 
 func load_documents(documents: Array[Resource]) -> void:
+	AudioManager.play_sfx("paper")
 	_documents = documents
 	_current_tab = 0
 
@@ -67,6 +68,8 @@ func _show_document(index: int) -> void:
 		return
 
 	var same_tab: bool = (index == _current_tab and content_label.text != "")
+	if not same_tab:
+		AudioManager.play_sfx("tab_click")
 	_current_tab = index
 	var doc: DocumentData = _documents[index] as DocumentData
 	if doc == null:
