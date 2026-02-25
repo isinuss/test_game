@@ -148,10 +148,10 @@ func _build_drawer(day: int) -> void:
 	# Drawer panel
 	var panel: PanelContainer = PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.offset_left = -220
-	panel.offset_top = -160
-	panel.offset_right = 220
-	panel.offset_bottom = 160
+	panel.offset_left = -250
+	panel.offset_top = -220
+	panel.offset_right = 250
+	panel.offset_bottom = 220
 	_overlay.add_child(panel)
 
 	# Slide up animation
@@ -163,10 +163,10 @@ func _build_drawer(day: int) -> void:
 
 	# Inner margin
 	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	panel.add_child(margin)
 
 	var vbox: VBoxContainer = VBoxContainer.new()
@@ -179,15 +179,15 @@ func _build_drawer(day: int) -> void:
 
 	var title_lbl: Label = Label.new()
 	title_lbl.text = "MASA ÇEKMECESİ"
-	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_font_size_override("font_size", 18)
 	title_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title_lbl)
 
 	var close_btn: Button = Button.new()
 	close_btn.text = "✖"
-	close_btn.custom_minimum_size = Vector2(28, 28)
-	close_btn.add_theme_font_size_override("font_size", 14)
+	close_btn.custom_minimum_size = Vector2(48, 48)
+	close_btn.add_theme_font_size_override("font_size", 20)
 	close_btn.pressed.connect(hide_drawer)
 	title_row.add_child(close_btn)
 
@@ -198,7 +198,7 @@ func _build_drawer(day: int) -> void:
 	# Day label
 	var day_lbl: Label = Label.new()
 	day_lbl.text = "%d. Gün" % day
-	day_lbl.add_theme_font_size_override("font_size", 10)
+	day_lbl.add_theme_font_size_override("font_size", 13)
 	day_lbl.add_theme_color_override("font_color", Color(0.5, 0.48, 0.4))
 	vbox.add_child(day_lbl)
 
@@ -213,8 +213,8 @@ func _build_drawer(day: int) -> void:
 		var btn: Button = Button.new()
 		btn.text = "  %s  %s" % [item.get("icon", "?"), item.get("name", "")]
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.custom_minimum_size = Vector2(0, 30)
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.custom_minimum_size = Vector2(0, 48)
+		btn.add_theme_font_size_override("font_size", 15)
 		var idx: int = i
 		var desc: String = item.get("desc", "")
 		btn.pressed.connect(func() -> void: _show_item_desc(desc, idx))
@@ -234,9 +234,9 @@ func _build_drawer(day: int) -> void:
 	_desc_label = Label.new()
 	_desc_label.text = "Bir eşyaya tıklayarak incele..."
 	_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_desc_label.add_theme_font_size_override("font_size", 11)
+	_desc_label.add_theme_font_size_override("font_size", 14)
 	_desc_label.add_theme_color_override("font_color", Color(0.7, 0.68, 0.6))
-	_desc_label.custom_minimum_size = Vector2(0, 70)
+	_desc_label.custom_minimum_size = Vector2(0, 90)
 	_desc_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_desc_label)
 

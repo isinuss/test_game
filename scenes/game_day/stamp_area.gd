@@ -2,17 +2,20 @@ extends Control
 ## HIRE/REJECT stamp buttons with animation, visual feedback, and screen shake.
 
 signal stamp_pressed(hired: bool)
+signal info_pressed
 
 @onready var hire_button: Button = %HireButton
 @onready var reject_button: Button = %RejectButton
 @onready var next_button: Button = %NextButton
 @onready var status_label: Label = %StampStatusLabel
+@onready var info_button: Button = %InfoButton
 
 var _buttons_enabled: bool = false
 
 func _ready() -> void:
 	hire_button.pressed.connect(_on_hire)
 	reject_button.pressed.connect(_on_reject)
+	info_button.pressed.connect(func() -> void: info_pressed.emit())
 	set_buttons_enabled(false)
 	next_button.visible = false
 

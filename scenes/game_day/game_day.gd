@@ -1,12 +1,13 @@
 extends Control
-## Core gameplay scene. Orchestrates the split-screen day flow:
-## Top: booth with walking characters. Bottom: desk with documents + stamps.
+## Core gameplay scene — portrait mobile layout.
+## Top: booth with characters. Middle: documents. Bottom: action bar (hire/reject).
+## Directives shown as overlay panel.
 
 signal _event_popup_dismissed
 
 @onready var booth_view: Control = %BoothView
 @onready var document_view: Control = %DocumentView
-@onready var directive_panel: PanelContainer = %DirectivePanel
+@onready var directive_panel: Control = %DirectivePanel
 @onready var stamp_area: Control = %StampArea
 @onready var drawer_panel: Control = %DrawerPanel
 
@@ -32,15 +33,19 @@ func _ready() -> void:
 	# Insert special event candidates
 	_insert_event_candidates()
 
-	# Setup UI
+	# Setup UI — directive panel is now an overlay
 	directive_panel.load_directives(GameManager.current_day)
 	stamp_area.stamp_pressed.connect(_on_stamp_decision)
 	EventBus.documents_received.connect(_on_documents_received)
 
-	# Drawer button
+	# Connect directive panel show/hide buttons
 	var drawer_btn: Button = directive_panel.find_child("DrawerButton", true, false)
 	if drawer_btn:
 		drawer_btn.pressed.connect(_on_drawer_pressed)
+
+	# Connect info button in stamp area to show directive overlay
+	if stamp_area.has_signal("info_pressed"):
+		stamp_area.info_pressed.connect(_on_info_pressed)
 
 	# Audio: stop menu music, start office ambient
 	AudioManager.stop_music()
@@ -146,13 +151,13 @@ func _show_event_popup(event: Dictionary) -> void:
 	panel.anchors_preset = Control.PRESET_CENTER
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.offset_left = -250
-	panel.offset_top = -150
+	panel.offset_top = -200
 	panel.offset_right = 250
-	panel.offset_bottom = 150
+	panel.offset_bottom = 200
 	# Pop-in animation
 	panel.scale = Vector2(0.8, 0.8)
 	panel.modulate.a = 0.0
-	panel.pivot_offset = Vector2(250, 150)
+	panel.pivot_offset = Vector2(250, 200)
 	overlay.add_child(panel)
 
 	var panel_tween: Tween = create_tween()
@@ -160,24 +165,20 @@ func _show_event_popup(event: Dictionary) -> void:
 	panel_tween.tween_property(panel, "modulate:a", 1.0, 0.2)
 	panel_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
 	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	panel.add_child(margin)
 
 	var inner_vbox: VBoxContainer = VBoxContainer.new()
-	inner_vbox.add_theme_constant_override("separation", 8)
+	inner_vbox.add_theme_constant_override("separation", 10)
 	margin.add_child(inner_vbox)
 
 	var title_lbl: Label = Label.new()
 	title_lbl.text = event.get("title", "")
-	title_lbl.add_theme_font_size_override("font_size", 18)
+	title_lbl.add_theme_font_size_override("font_size", 20)
 	title_lbl.add_theme_color_override("font_color", Color(0.9, 0.4, 0.3))
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inner_vbox.add_child(title_lbl)
@@ -185,7 +186,7 @@ func _show_event_popup(event: Dictionary) -> void:
 	var desc_lbl: Label = Label.new()
 	desc_lbl.text = event.get("text", "")
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.add_theme_font_size_override("font_size", 12)
+	desc_lbl.add_theme_font_size_override("font_size", 14)
 	inner_vbox.add_child(desc_lbl)
 
 	var spacer: Control = Control.new()
@@ -197,7 +198,7 @@ func _show_event_popup(event: Dictionary) -> void:
 		var choice: Dictionary = choices[i]
 		var btn: Button = Button.new()
 		btn.text = choice.get("text", "")
-		btn.custom_minimum_size = Vector2(0, 32)
+		btn.custom_minimum_size = Vector2(0, 48)
 		var choice_data: Dictionary = choice
 		var ev_id: String = event.get("id", "")
 		btn.pressed.connect(func() -> void:
@@ -304,6 +305,10 @@ func _check_day_end_events() -> bool:
 				await _event_popup_dismissed
 				return true
 	return false
+
+func _on_info_pressed() -> void:
+	AudioManager.play_sfx("ui_click")
+	directive_panel.show_panel()
 
 func _on_drawer_pressed() -> void:
 	AudioManager.play_sfx("ui_click")

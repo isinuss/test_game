@@ -2,66 +2,95 @@
 
 [ext_resource type="Script" path="res://scenes/game_day/directive_panel.gd" id="1"]
 
-[node name="DirectivePanel" type="PanelContainer"]
-custom_minimum_size = Vector2(160, 0)
+[node name="DirectivePanel" type="Control"]
 layout_mode = 2
-size_flags_horizontal = 0
+mouse_filter = 2
 script = ExtResource("1")
 
-[node name="Margin" type="MarginContainer" parent="."]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+[node name="Overlay" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="SlidePanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+offset_left = -320.0
+offset_top = 30.0
+offset_right = 0.0
+offset_bottom = 960.0
+
+[node name="Margin" type="MarginContainer" parent="SlidePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="SlidePanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Margin/VBox"]
+[node name="TitleRow" type="HBoxContainer" parent="SlidePanel/Margin/VBox"]
 layout_mode = 2
+
+[node name="Title" type="Label" parent="SlidePanel/Margin/VBox/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.4, 0.3, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 16
 text = "DİREKTİFLER"
-horizontal_alignment = 1
 
-[node name="Sep" type="HSeparator" parent="Margin/VBox"]
+[node name="CloseBtn" type="Button" parent="SlidePanel/Margin/VBox/TitleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_override_font_sizes/font_size = 18
+text = "✖"
+
+[node name="Sep" type="HSeparator" parent="SlidePanel/Margin/VBox"]
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Margin/VBox"]
+[node name="ScrollContainer" type="ScrollContainer" parent="SlidePanel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="DirectivesList" type="VBoxContainer" parent="Margin/VBox/ScrollContainer"]
+[node name="DirectivesList" type="VBoxContainer" parent="SlidePanel/Margin/VBox/ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="Sep2" type="HSeparator" parent="Margin/VBox"]
+[node name="Sep2" type="HSeparator" parent="SlidePanel/Margin/VBox"]
 layout_mode = 2
 
-[node name="MoneyLabel" type="Label" parent="Margin/VBox"]
+[node name="MoneyLabel" type="Label" parent="SlidePanel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.75, 0.5, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 14
 text = "PARA: ₺0"
 
-[node name="ViolationsLabel" type="Label" parent="Margin/VBox"]
+[node name="ViolationsLabel" type="Label" parent="SlidePanel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.4, 0.3, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 14
 text = "İHLAL: 0/3"
 
-[node name="Sep3" type="HSeparator" parent="Margin/VBox"]
+[node name="Sep3" type="HSeparator" parent="SlidePanel/Margin/VBox"]
 layout_mode = 2
 
-[node name="DrawerButton" type="Button" parent="Margin/VBox"]
+[node name="DrawerButton" type="Button" parent="SlidePanel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 28)
-theme_override_font_sizes/font_size = 10
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 14
 text = "ÇEKMECE"

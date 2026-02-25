@@ -158,7 +158,7 @@ func _on_candidate_arrived(candidate: Resource) -> void:
 	character.setup_from_seed(_current_candidate.photo_seed, _current_candidate.gender)
 
 	# Walk in animation — from door on the right
-	character.position.x = 960.0
+	character.position.x = 540.0
 	character.modulate.a = 0.0
 	var target_x: float = size.x / 2.0 - character.size.x / 2.0
 
@@ -210,7 +210,7 @@ func show_reaction(hired: bool) -> void:
 func walk_out() -> void:
 	_character_arrived = false
 	var tween: Tween = create_tween()
-	tween.tween_property(character, "position:x", -150.0, 0.8).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(character, "position:x", -80.0, 0.8).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	tween.parallel().tween_property(character, "modulate:a", 0.0, 0.6).set_delay(0.3)
 	tween.tween_callback(func() -> void:
 		_hide_speech()

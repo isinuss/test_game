@@ -51,16 +51,14 @@ func _populate() -> void:
 		var lbl: Label = Label.new()
 		lbl.text = "• " + d.directive_text
 		lbl.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1))
-		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_font_size_override("font_size", 15)
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.modulate.a = 0.0
-		lbl.position.x = -20.0
 		directives_container.add_child(lbl)
 
 		var d_tween: Tween = create_tween()
 		d_tween.tween_interval(directive_delay)
 		d_tween.tween_property(lbl, "modulate:a", 1.0, 0.3)
-		d_tween.parallel().tween_property(lbl, "position:x", 0.0, 0.3).set_ease(Tween.EASE_OUT)
 		directive_delay += 0.35
 
 	# === MEMO — typewriter effect ===

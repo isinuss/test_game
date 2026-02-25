@@ -59,16 +59,15 @@ func _populate() -> void:
 		else:
 			lbl.add_theme_color_override("font_color", Color(0.6, 0.8, 0.5))
 
-		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.modulate.a = 0.0
-		lbl.position.x = -10.0
 		results_container.add_child(lbl)
 
-		# Animate each line appearing with slide
+		# Animate each line appearing with fade
 		var tween: Tween = create_tween()
 		tween.tween_interval(line_delay)
 		tween.tween_property(lbl, "modulate:a", 1.0, 0.3)
-		tween.parallel().tween_property(lbl, "position:x", 0.0, 0.3).set_ease(Tween.EASE_OUT)
 		line_delay += 0.4
 
 	# Summary stats

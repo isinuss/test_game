@@ -54,17 +54,17 @@ func _draw() -> void:
 	draw_set_transform(center, _stamp_rotation, Vector2.ONE)
 
 	# Outer border rectangle
-	var rect_size: Vector2 = Vector2(220, 60)
+	var rect_size: Vector2 = Vector2(280, 76)
 	var rect: Rect2 = Rect2(-rect_size / 2.0, rect_size)
-	draw_rect(rect, _stamp_color, false, 3.0)
+	draw_rect(rect, _stamp_color, false, 4.0)
 
 	# Inner border
-	var inner_rect: Rect2 = Rect2(-rect_size / 2.0 + Vector2(4, 4), rect_size - Vector2(8, 8))
-	draw_rect(inner_rect, _stamp_color, false, 1.5)
+	var inner_rect: Rect2 = Rect2(-rect_size / 2.0 + Vector2(5, 5), rect_size - Vector2(10, 10))
+	draw_rect(inner_rect, _stamp_color, false, 2.0)
 
 	# Text
 	var font: Font = ThemeDB.fallback_font
-	var font_size: int = 24
+	var font_size: int = 30
 	var text_size: Vector2 = font.get_string_size(_stamp_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 	var text_pos: Vector2 = Vector2(-text_size.x / 2.0, text_size.y / 3.0)
 	draw_string(font, text_pos, _stamp_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, _stamp_color)

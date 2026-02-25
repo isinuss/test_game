@@ -2,9 +2,13 @@ extends Control
 ## Pseudo-3D perspective overlay for the booth scene.
 ## Draws perspective floor grid, wall shadows, desk items, wall decorations,
 ## and architectural details on top of the base ColorRect structure.
+## All X positions scale proportionally to viewport width via _px().
 
 var _time: float = 0.0
 var _redraw_timer: float = 0.0
+
+## Reference width used in original layout design.
+const REF_W: float = 960.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -15,6 +19,10 @@ func _process(delta: float) -> void:
 	if _redraw_timer >= 0.066:
 		_redraw_timer = 0.0
 		queue_redraw()
+
+## Proportional X helper — scales a position designed for 960px to current width.
+func _px(x_960: float) -> float:
+	return x_960 * size.x / REF_W
 
 func _draw() -> void:
 	var w: float = size.x
@@ -38,7 +46,7 @@ func _draw_wall_shading(w: float, h: float) -> void:
 	var wall_bottom: float = h * 0.82
 
 	# Left corner shadow gradient
-	var shadow_w: float = 70.0
+	var shadow_w: float = _px(70.0)
 	var steps: int = 12
 	for i in range(steps):
 		var t: float = float(i) / float(steps)
@@ -70,11 +78,12 @@ func _draw_ceiling_panels(w: float, h: float) -> void:
 
 	# AC vent unit
 	var vx: float = w * 0.72
-	draw_rect(Rect2(vx, 2.0, 52.0, 10.0), Color(0.19, 0.18, 0.16, 1.0))
-	draw_rect(Rect2(vx, 2.0, 52.0, 10.0), Color(0.22, 0.2, 0.17, 1.0), false, 1.0)
+	var vent_w: float = _px(52.0)
+	draw_rect(Rect2(vx, 2.0, vent_w, 10.0), Color(0.19, 0.18, 0.16, 1.0))
+	draw_rect(Rect2(vx, 2.0, vent_w, 10.0), Color(0.22, 0.2, 0.17, 1.0), false, 1.0)
 	for i in range(6):
 		var sy: float = 4.0 + i * 1.4
-		draw_line(Vector2(vx + 4, sy), Vector2(vx + 48, sy), Color(0.1, 0.09, 0.08, 0.6), 1.0)
+		draw_line(Vector2(vx + 4, sy), Vector2(vx + vent_w - 4, sy), Color(0.1, 0.09, 0.08, 0.6), 1.0)
 
 # ── Perspective floor grid ─────────────────────────────────────────────────
 
@@ -144,10 +153,10 @@ func _draw_counter_depth(w: float, h: float) -> void:
 # ── Door corridor depth ────────────────────────────────────────────────────
 
 func _draw_door_depth(w: float, h: float) -> void:
-	var dl: float = 828.0  # Door inner left
-	var dr: float = 920.0  # Door inner right
+	var dl: float = _px(828.0)  # Door inner left
+	var dr: float = _px(920.0)  # Door inner right
 	var dt: float = 36.0   # Door top
-	var db: float = 210.0  # Door bottom
+	var db: float = 200.0  # Door bottom
 	var cx: float = (dl + dr) / 2.0
 
 	# Corridor vanishing point
@@ -178,29 +187,31 @@ func _draw_door_depth(w: float, h: float) -> void:
 
 func _draw_wall_decor(w: float, h: float) -> void:
 	# ─── Bulletin board (above filing cabinet) ───
-	var bb_x: float = 32.0
+	var bb_x: float = _px(32.0)
 	var bb_y: float = 26.0
+	var bb_w: float = _px(82.0)
+	var bb_h: float = 52.0
 	# Cork board
-	draw_rect(Rect2(bb_x, bb_y, 82.0, 52.0), Color(0.36, 0.28, 0.18, 1.0))
-	draw_rect(Rect2(bb_x, bb_y, 82.0, 52.0), Color(0.28, 0.22, 0.14, 1.0), false, 2.0)
+	draw_rect(Rect2(bb_x, bb_y, bb_w, bb_h), Color(0.36, 0.28, 0.18, 1.0))
+	draw_rect(Rect2(bb_x, bb_y, bb_w, bb_h), Color(0.28, 0.22, 0.14, 1.0), false, 2.0)
 	# Pinned notes
-	draw_rect(Rect2(bb_x + 5, bb_y + 8, 24.0, 20.0), Color(0.88, 0.85, 0.42, 0.85))  # Yellow sticky
-	draw_rect(Rect2(bb_x + 34, bb_y + 5, 20.0, 28.0), Color(0.82, 0.8, 0.74, 0.85))   # White paper
-	draw_rect(Rect2(bb_x + 58, bb_y + 12, 20.0, 16.0), Color(0.55, 0.78, 0.6, 0.75))  # Green sticky
-	draw_rect(Rect2(bb_x + 10, bb_y + 34, 32.0, 14.0), Color(0.72, 0.8, 0.9, 0.75))   # Blue note
+	draw_rect(Rect2(bb_x + 5, bb_y + 8, _px(24.0), 20.0), Color(0.88, 0.85, 0.42, 0.85))  # Yellow sticky
+	draw_rect(Rect2(bb_x + _px(34.0), bb_y + 5, _px(20.0), 28.0), Color(0.82, 0.8, 0.74, 0.85))   # White paper
+	draw_rect(Rect2(bb_x + _px(58.0), bb_y + 12, _px(20.0), 16.0), Color(0.55, 0.78, 0.6, 0.75))  # Green sticky
+	draw_rect(Rect2(bb_x + _px(10.0), bb_y + 34, _px(32.0), 14.0), Color(0.72, 0.8, 0.9, 0.75))   # Blue note
 	# Pins
-	draw_rect(Rect2(bb_x + 15, bb_y + 7, 3, 3), Color(0.9, 0.2, 0.12, 1.0))
-	draw_rect(Rect2(bb_x + 42, bb_y + 4, 3, 3), Color(0.2, 0.5, 0.85, 1.0))
-	draw_rect(Rect2(bb_x + 66, bb_y + 11, 3, 3), Color(0.2, 0.72, 0.3, 1.0))
-	draw_rect(Rect2(bb_x + 24, bb_y + 33, 3, 3), Color(0.9, 0.82, 0.12, 1.0))
+	draw_rect(Rect2(bb_x + _px(15.0), bb_y + 7, 3, 3), Color(0.9, 0.2, 0.12, 1.0))
+	draw_rect(Rect2(bb_x + _px(42.0), bb_y + 4, 3, 3), Color(0.2, 0.5, 0.85, 1.0))
+	draw_rect(Rect2(bb_x + _px(66.0), bb_y + 11, 3, 3), Color(0.2, 0.72, 0.3, 1.0))
+	draw_rect(Rect2(bb_x + _px(24.0), bb_y + 33, 3, 3), Color(0.9, 0.82, 0.12, 1.0))
 	# Text lines on white paper
 	for i in range(4):
-		draw_rect(Rect2(bb_x + 37, bb_y + 10 + i * 5, 14.0, 1.5), Color(0.3, 0.28, 0.25, 0.4))
+		draw_rect(Rect2(bb_x + _px(37.0), bb_y + 10 + i * 5, _px(14.0), 1.5), Color(0.3, 0.28, 0.25, 0.4))
 
 	# ─── Framed certificate/photo (between clock and center) ───
-	var fr_x: float = 310.0
+	var fr_x: float = _px(310.0)
 	var fr_y: float = 48.0
-	var fr_w: float = 56.0
+	var fr_w: float = _px(56.0)
 	var fr_h: float = 44.0
 	# Outer frame
 	draw_rect(Rect2(fr_x, fr_y, fr_w, fr_h), Color(0.32, 0.25, 0.16, 1.0))
@@ -218,9 +229,9 @@ func _draw_wall_decor(w: float, h: float) -> void:
 	draw_rect(Rect2(fr_x + fr_w - 18, fr_y + fr_h - 18, 10, 10), Color(0.7, 0.25, 0.2, 0.3))
 
 	# ─── İş Güvenliği poster (right side) ───
-	var po_x: float = 600.0
+	var po_x: float = _px(600.0)
 	var po_y: float = 45.0
-	var po_w: float = 58.0
+	var po_w: float = _px(58.0)
 	var po_h: float = 75.0
 	# Poster paper
 	draw_rect(Rect2(po_x, po_y, po_w, po_h), Color(0.42, 0.4, 0.3, 1.0))
@@ -240,9 +251,9 @@ func _draw_wall_decor(w: float, h: float) -> void:
 	draw_rect(Rect2(po_x + po_w / 2.0 - 2, po_y - 2, 4, 4), Color(0.85, 0.18, 0.12, 1.0))
 
 	# ─── Calendar (near clock, right of it) ───
-	var cal_x: float = 260.0
+	var cal_x: float = _px(260.0)
 	var cal_y: float = 56.0
-	var cal_w: float = 30.0
+	var cal_w: float = _px(30.0)
 	var cal_h: float = 38.0
 	draw_rect(Rect2(cal_x, cal_y, cal_w, cal_h), Color(0.88, 0.85, 0.78, 1.0))
 	# Month header
@@ -250,24 +261,24 @@ func _draw_wall_decor(w: float, h: float) -> void:
 	# Day grid
 	for row in range(4):
 		for col in range(5):
-			draw_rect(Rect2(cal_x + 3 + col * 5.2, cal_y + 13 + row * 6, 2.5, 2.5), Color(0.3, 0.28, 0.25, 0.35))
+			draw_rect(Rect2(cal_x + 3 + col * _px(5.2), cal_y + 13 + row * 6, 2.5, 2.5), Color(0.3, 0.28, 0.25, 0.35))
 	# Today marker (highlighted)
-	draw_rect(Rect2(cal_x + 3 + 2 * 5.2, cal_y + 13 + 1 * 6, 2.5, 2.5), Color(0.8, 0.25, 0.2, 0.7))
+	draw_rect(Rect2(cal_x + 3 + 2 * _px(5.2), cal_y + 13 + 1 * 6, 2.5, 2.5), Color(0.8, 0.25, 0.2, 0.7))
 	# Pin
 	draw_rect(Rect2(cal_x + cal_w / 2.0 - 1.5, cal_y - 2, 3, 3), Color(0.6, 0.55, 0.42, 1.0))
 
 	# ─── Light switch (right wall) ───
-	draw_rect(Rect2(770.0, 128.0, 11.0, 18.0), Color(0.78, 0.75, 0.68, 1.0))
-	draw_rect(Rect2(770.0, 128.0, 11.0, 18.0), Color(0.65, 0.62, 0.55, 1.0), false, 1.0)
-	draw_rect(Rect2(773.0, 131.0, 5.0, 6.0), Color(0.68, 0.65, 0.58, 1.0))
+	draw_rect(Rect2(_px(770.0), 128.0, 11.0, 18.0), Color(0.78, 0.75, 0.68, 1.0))
+	draw_rect(Rect2(_px(770.0), 128.0, 11.0, 18.0), Color(0.65, 0.62, 0.55, 1.0), false, 1.0)
+	draw_rect(Rect2(_px(773.0), 131.0, 5.0, 6.0), Color(0.68, 0.65, 0.58, 1.0))
 
 	# ─── Wall conduit pipe (vertical, right side) ───
-	draw_line(Vector2(762, 18), Vector2(762, 128), Color(0.26, 0.24, 0.2, 0.5), 2.0)
-	draw_line(Vector2(762, 128), Vector2(770, 128), Color(0.26, 0.24, 0.2, 0.5), 2.0)
+	draw_line(Vector2(_px(762.0), 18), Vector2(_px(762.0), 128), Color(0.26, 0.24, 0.2, 0.5), 2.0)
+	draw_line(Vector2(_px(762.0), 128), Vector2(_px(770.0), 128), Color(0.26, 0.24, 0.2, 0.5), 2.0)
 
 	# ─── Wall texture lines (subtle cracks/seams) ───
-	draw_line(Vector2(500, 60), Vector2(500, 180), Color(0.17, 0.16, 0.14, 0.3), 1.0)
-	draw_line(Vector2(380, 100), Vector2(420, 100), Color(0.17, 0.16, 0.14, 0.15), 1.0)
+	draw_line(Vector2(_px(500.0), 60), Vector2(_px(500.0), 180), Color(0.17, 0.16, 0.14, 0.3), 1.0)
+	draw_line(Vector2(_px(380.0), 100), Vector2(_px(420.0), 100), Color(0.17, 0.16, 0.14, 0.15), 1.0)
 
 # ── Desk / counter items ──────────────────────────────────────────────────
 
@@ -275,22 +286,22 @@ func _draw_desk_items(w: float, h: float) -> void:
 	var surface_y: float = h * 0.86  # Counter top surface
 
 	# ─── Desk lamp (far left) ───
-	var dl_x: float = 26.0
+	var dl_x: float = _px(26.0)
 	# Base
-	draw_rect(Rect2(dl_x, surface_y - 5, 18.0, 4.0), Color(0.16, 0.16, 0.16, 0.9))
+	draw_rect(Rect2(dl_x, surface_y - 5, _px(18.0), 4.0), Color(0.16, 0.16, 0.16, 0.9))
 	# Stem
-	draw_line(Vector2(dl_x + 9, surface_y - 5), Vector2(dl_x + 7, surface_y - 24), Color(0.18, 0.18, 0.18, 0.9), 2.0)
+	draw_line(Vector2(dl_x + _px(9.0), surface_y - 5), Vector2(dl_x + _px(7.0), surface_y - 24), Color(0.18, 0.18, 0.18, 0.9), 2.0)
 	# Shade
-	draw_rect(Rect2(dl_x - 3, surface_y - 28, 22.0, 8.0), Color(0.26, 0.22, 0.16, 0.9))
-	draw_rect(Rect2(dl_x - 3, surface_y - 28, 22.0, 8.0), Color(0.3, 0.25, 0.18, 1.0), false, 1.0)
+	draw_rect(Rect2(dl_x - 3, surface_y - 28, _px(22.0), 8.0), Color(0.26, 0.22, 0.16, 0.9))
+	draw_rect(Rect2(dl_x - 3, surface_y - 28, _px(22.0), 8.0), Color(0.3, 0.25, 0.18, 1.0), false, 1.0)
 	# Light glow
-	draw_rect(Rect2(dl_x - 1, surface_y - 20, 18.0, 6.0), Color(0.45, 0.38, 0.25, 0.08))
+	draw_rect(Rect2(dl_x - 1, surface_y - 20, _px(18.0), 6.0), Color(0.45, 0.38, 0.25, 0.08))
 
 	# ─── Pen holder ───
-	var ph_x: float = 85.0
+	var ph_x: float = _px(85.0)
 	# Holder body
-	draw_rect(Rect2(ph_x, surface_y - 20, 16.0, 18.0), Color(0.2, 0.18, 0.16, 1.0))
-	draw_rect(Rect2(ph_x + 1, surface_y - 20, 14.0, 2.5), Color(0.26, 0.23, 0.2, 1.0))  # Rim
+	draw_rect(Rect2(ph_x, surface_y - 20, _px(16.0), 18.0), Color(0.2, 0.18, 0.16, 1.0))
+	draw_rect(Rect2(ph_x + 1, surface_y - 20, _px(14.0), 2.5), Color(0.26, 0.23, 0.2, 1.0))  # Rim
 	# Pens
 	draw_line(Vector2(ph_x + 3, surface_y - 27), Vector2(ph_x + 4, surface_y - 6), Color(0.12, 0.12, 0.5, 0.85), 1.5)
 	draw_line(Vector2(ph_x + 7, surface_y - 30), Vector2(ph_x + 7, surface_y - 6), Color(0.55, 0.12, 0.12, 0.85), 1.5)
@@ -299,32 +310,32 @@ func _draw_desk_items(w: float, h: float) -> void:
 	draw_line(Vector2(ph_x + 14, surface_y - 32), Vector2(ph_x + 13, surface_y - 6), Color(0.55, 0.5, 0.2, 0.7), 1.5)
 
 	# ─── Document / file stack ───
-	var fs_x: float = 155.0
+	var fs_x: float = _px(155.0)
 	# Stacked papers
-	draw_rect(Rect2(fs_x - 1, surface_y - 5, 44.0, 4.0), Color(0.68, 0.65, 0.58, 0.9))
-	draw_rect(Rect2(fs_x + 1, surface_y - 8, 40.0, 4.0), Color(0.72, 0.7, 0.62, 0.9))
-	draw_rect(Rect2(fs_x + 3, surface_y - 11, 38.0, 4.0), Color(0.66, 0.62, 0.55, 0.9))
+	draw_rect(Rect2(fs_x - 1, surface_y - 5, _px(44.0), 4.0), Color(0.68, 0.65, 0.58, 0.9))
+	draw_rect(Rect2(fs_x + 1, surface_y - 8, _px(40.0), 4.0), Color(0.72, 0.7, 0.62, 0.9))
+	draw_rect(Rect2(fs_x + 3, surface_y - 11, _px(38.0), 4.0), Color(0.66, 0.62, 0.55, 0.9))
 	# Manila folder on top
-	draw_rect(Rect2(fs_x + 2, surface_y - 16, 38.0, 7.0), Color(0.68, 0.56, 0.35, 1.0))
-	draw_rect(Rect2(fs_x + 2, surface_y - 16, 38.0, 2.5), Color(0.72, 0.6, 0.38, 1.0))  # Tab
+	draw_rect(Rect2(fs_x + 2, surface_y - 16, _px(38.0), 7.0), Color(0.68, 0.56, 0.35, 1.0))
+	draw_rect(Rect2(fs_x + 2, surface_y - 16, _px(38.0), 2.5), Color(0.72, 0.6, 0.38, 1.0))  # Tab
 
 	# ─── Name plate (center) ───
 	var np_x: float = w * 0.44
 	# Base stand
-	draw_rect(Rect2(np_x, surface_y - 12, 64.0, 10.0), Color(0.3, 0.24, 0.16, 1.0))
+	draw_rect(Rect2(np_x, surface_y - 12, _px(64.0), 10.0), Color(0.3, 0.24, 0.16, 1.0))
 	# Face plate
-	draw_rect(Rect2(np_x + 3, surface_y - 11, 58.0, 7.0), Color(0.38, 0.32, 0.22, 1.0))
+	draw_rect(Rect2(np_x + 3, surface_y - 11, _px(58.0), 7.0), Color(0.38, 0.32, 0.22, 1.0))
 	# Name text line
-	draw_rect(Rect2(np_x + 10, surface_y - 8, 44.0, 2.0), Color(0.62, 0.55, 0.4, 0.6))
+	draw_rect(Rect2(np_x + 10, surface_y - 8, _px(44.0), 2.0), Color(0.62, 0.55, 0.4, 0.6))
 
 	# ─── Stapler ───
 	var st_x: float = w * 0.62
-	draw_rect(Rect2(st_x, surface_y - 6, 26.0, 4.0), Color(0.14, 0.14, 0.14, 0.9))  # Base
-	draw_rect(Rect2(st_x + 2, surface_y - 9, 22.0, 3.5), Color(0.18, 0.18, 0.18, 0.9))  # Top
-	draw_rect(Rect2(st_x + 22, surface_y - 10, 4.0, 5.0), Color(0.16, 0.16, 0.16, 0.9))  # Hinge
+	draw_rect(Rect2(st_x, surface_y - 6, _px(26.0), 4.0), Color(0.14, 0.14, 0.14, 0.9))  # Base
+	draw_rect(Rect2(st_x + 2, surface_y - 9, _px(22.0), 3.5), Color(0.18, 0.18, 0.18, 0.9))  # Top
+	draw_rect(Rect2(st_x + _px(22.0), surface_y - 10, 4.0, 5.0), Color(0.16, 0.16, 0.16, 0.9))  # Hinge
 
 	# ─── Coffee cup with animated steam ───
-	var cc_x: float = w - 155.0
+	var cc_x: float = w - _px(155.0)
 	# Cup body
 	draw_rect(Rect2(cc_x, surface_y - 16, 14.0, 14.0), Color(0.82, 0.8, 0.74, 1.0))
 	# Handle
@@ -337,9 +348,9 @@ func _draw_desk_items(w: float, h: float) -> void:
 	_draw_steam(cc_x + 9, surface_y - 17)
 
 	# ─── Tape dispenser (far right) ───
-	var td_x: float = w - 95.0
-	draw_rect(Rect2(td_x, surface_y - 8, 18.0, 7.0), Color(0.2, 0.35, 0.2, 0.9))
-	draw_rect(Rect2(td_x + 14, surface_y - 12, 6.0, 6.0), Color(0.18, 0.3, 0.18, 0.9))  # Roll
+	var td_x: float = w - _px(95.0)
+	draw_rect(Rect2(td_x, surface_y - 8, _px(18.0), 7.0), Color(0.2, 0.35, 0.2, 0.9))
+	draw_rect(Rect2(td_x + _px(14.0), surface_y - 12, 6.0, 6.0), Color(0.18, 0.3, 0.18, 0.9))  # Roll
 
 func _draw_steam(x: float, y: float) -> void:
 	# Two wavy steam lines with gentle animation

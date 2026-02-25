@@ -37,8 +37,8 @@ func load_documents(documents: Array[Resource]) -> void:
 			continue
 		var btn: Button = Button.new()
 		btn.text = DOC_TYPE_NAMES.get(doc.doc_type, doc.doc_type)
-		btn.custom_minimum_size = Vector2(72, 26)
-		btn.add_theme_font_size_override("font_size", 10)
+		btn.custom_minimum_size = Vector2(100, 44)
+		btn.add_theme_font_size_override("font_size", 13)
 		var idx: int = i
 		btn.pressed.connect(func() -> void: _show_document(idx))
 		tab_container.add_child(btn)
@@ -109,52 +109,52 @@ func _show_document(index: int) -> void:
 
 func _format_cv(doc: DocumentData) -> String:
 	var t: String = ""
-	t += "═══════════════════════\n"
-	t += "     ÖZGEÇMİŞ\n"
-	t += "═══════════════════════\n\n"
+	t += "══════════════════\n"
+	t += "    ÖZGEÇMİŞ\n"
+	t += "══════════════════\n\n"
 	for key: String in doc.content:
 		t += key + ": " + str(doc.content[key]) + "\n"
 	return t
 
 func _format_diploma(doc: DocumentData) -> String:
 	var t: String = ""
-	t += "╔═══════════════════════╗\n"
-	t += "║      DİPLOMA          ║\n"
-	t += "╚═══════════════════════╝\n\n"
+	t += "╔══════════════════╗\n"
+	t += "║     DİPLOMA      ║\n"
+	t += "╚══════════════════╝\n\n"
 	var uni: String = doc.content.get("Üniversite", "")
 	t += "  " + uni + "\n"
-	t += "  ─────────────────\n\n"
+	t += "  ──────────────\n\n"
 	t += "  Öğrenci: " + doc.content.get("Öğrenci Adı", "") + "\n"
 	t += "  Bölüm: " + doc.content.get("Bölüm", "") + "\n"
 	t += "  Yıl: " + str(doc.content.get("Mezuniyet Yılı", "")) + "\n"
 	t += "  GNO: " + str(doc.content.get("Not Ortalaması", "")) + "\n"
-	t += "\n         [MÜHÜR]\n"
+	t += "\n       [MÜHÜR]\n"
 	return t
 
 func _format_reference(doc: DocumentData) -> String:
 	var t: String = ""
-	t += "───── REFERANS MEKTUBU ─────\n\n"
+	t += "──── REFERANS MEKTUBU ────\n\n"
 	t += "Kimden: " + doc.content.get("Referans Veren", "") + "\n"
 	t += "Şirket: " + doc.content.get("Şirket", "") + "\n"
-	t += "─────────────────────────\n\n"
+	t += "──────────────────────\n\n"
 	t += doc.content.get("Değerlendirme", "") + "\n"
-	t += "\n─────────────────────────\n"
+	t += "\n──────────────────────\n"
 	t += "İmza: " + doc.content.get("Referans Veren", "") + "\n"
 	return t
 
 func _format_id_card(doc: DocumentData) -> String:
 	var t: String = ""
-	t += "┌─────────────────────┐\n"
-	t += "│  T.C. KİMLİK KARTI  │\n"
-	t += "├─────────────────────┤\n"
-	t += "│                     │\n"
-	t += "│  TC No: " + doc.content.get("TC Kimlik No", "") + "\n"
-	t += "│  Ad: " + doc.content.get("Ad Soyad", "") + "\n"
-	t += "│  Doğum: " + doc.content.get("Doğum Yılı", "") + "\n"
-	t += "│  Cinsiyet: " + doc.content.get("Cinsiyet", "") + "\n"
-	t += "│  İl: " + doc.content.get("İl", "") + "\n"
-	t += "│                     │\n"
-	t += "└─────────────────────┘\n"
+	t += "┌──────────────────┐\n"
+	t += "│ T.C. KİMLİK KARTI│\n"
+	t += "├──────────────────┤\n"
+	t += "│                  │\n"
+	t += "│ TC No: " + doc.content.get("TC Kimlik No", "") + "\n"
+	t += "│ Ad: " + doc.content.get("Ad Soyad", "") + "\n"
+	t += "│ Doğum: " + doc.content.get("Doğum Yılı", "") + "\n"
+	t += "│ Cinsiyet: " + doc.content.get("Cinsiyet", "") + "\n"
+	t += "│ İl: " + doc.content.get("İl", "") + "\n"
+	t += "│                  │\n"
+	t += "└──────────────────┘\n"
 	return t
 
 func clear_documents() -> void:
