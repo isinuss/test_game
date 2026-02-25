@@ -17,10 +17,10 @@ static func get_directive(directive_id: String) -> DirectiveData:
 			d.condition_type = "no_department"
 			d.condition_value = "Mühendislik"
 			d.is_mandatory = true
-		"disability_quota":
-			d.directive_text = "Engelli aday kotası: en az 1 engelli aday alınmalı"
-			d.condition_type = "quota"
-			d.condition_value = {"type": "disability", "min": 1}
+		"max_age_35":
+			d.directive_text = "Yaş politikası: 35 yaş üstü adayları almayın"
+			d.condition_type = "max_age"
+			d.condition_value = 35
 			d.is_mandatory = true
 		"must_hire_ahmet":
 			d.directive_text = "Sendika baskısı: Ahmet Yılmaz mutlaka alınmalı"
@@ -48,7 +48,7 @@ static func get_directives_for_day(day: int) -> Array[DirectiveData]:
 	match day:
 		1: config_directives = ["min_experience_3"]
 		2: config_directives = ["min_experience_3", "no_engineering"]
-		3: config_directives = ["min_experience_3", "no_engineering", "disability_quota"]
+		3: config_directives = ["min_experience_3", "no_engineering", "max_age_35"]
 		4: config_directives = ["min_experience_3", "must_hire_ahmet", "no_hiring"]
 		5: config_directives = ["min_experience_3", "report_suspicious"]
 

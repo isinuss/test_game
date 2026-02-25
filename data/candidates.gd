@@ -538,8 +538,13 @@ static func _ensure_directive_compliance(c: CandidateData, directives: Array[Str
 					c.documents[0].content["Bölüm"] = c.department
 					if c.documents.size() > 1:
 						c.documents[1].content["Bölüm"] = c.department
-			"disability_quota":
-				pass  # Handled specially
+			"max_age_35":
+				if c.age > 35:
+					c.age = randi_range(24, 35)
+					c.documents[0].content["Yaş"] = str(c.age)
+					for doc: Resource in c.documents:
+						if doc.doc_type == "id_card":
+							doc.content["Doğum Yılı"] = str(2026 - c.age)
 			"no_hiring":
 				pass  # Contradictory directive - handled at scoring level
 			"must_hire_ahmet":
@@ -551,7 +556,7 @@ static func _apply_directive_violation(c: CandidateData, directives: Array[Strin
 	# Pick one directive to violate
 	var violatable: Array[String] = []
 	for d: String in directives:
-		if d in ["min_experience_3", "no_engineering"]:
+		if d in ["min_experience_3", "no_engineering", "max_age_35"]:
 			violatable.append(d)
 
 	if violatable.is_empty():
@@ -573,3 +578,10 @@ static func _apply_directive_violation(c: CandidateData, directives: Array[Strin
 			if c.documents.size() > 1:
 				c.documents[1].content["Bölüm"] = c.department
 			c.rejection_reasons.append("Mühendislik bölümü — alım durduruldu")
+		"max_age_35":
+			c.age = randi_range(36, 50)
+			c.documents[0].content["Yaş"] = str(c.age)
+			for doc: Resource in c.documents:
+				if doc.doc_type == "id_card":
+					doc.content["Doğum Yılı"] = str(2026 - c.age)
+			c.rejection_reasons.append("35 yaş üstü — yaş politikası")

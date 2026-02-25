@@ -29,7 +29,6 @@ extends Resource
 @export var reference_quality: String = "good"  # excellent/good/suspicious/fake
 
 # Special flags
-@export var has_disability: bool = false
 @export var is_ceo_nephew: bool = false
 @export var is_union_candidate: bool = false
 

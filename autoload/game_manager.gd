@@ -60,7 +60,7 @@ func _init_day_configs() -> void:
 			"headline": "CEO'NUN AİLESİ GÜNDEMDE",
 			"num_candidates": 5,
 			"duration": 195.0,
-			"directives": ["min_experience_3", "no_engineering", "disability_quota"],
+			"directives": ["min_experience_3", "no_engineering", "max_age_35"],
 			"events": ["ceo_nephew"],
 			"inconsistency_ratio": 0.35,
 			"max_hires": 99,
