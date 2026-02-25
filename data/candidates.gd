@@ -443,24 +443,38 @@ static func inject_inconsistency(c: CandidateData, inc_type: String) -> void:
 
 static func generate_candidates_for_day(day: int, directives: Array[String], num: int, inconsistency_ratio: float) -> Array[CandidateData]:
 	var candidates: Array[CandidateData] = []
-	var base_seed: int = day * 1000 + randi() % 500
+	var base_seed: int = day * 1000 + randi() % 5000
 
-	# Determine how many should be hireable
-	var hire_count: int = maxi(1, int(num * randf_range(0.35, 0.6)))
+	var has_no_hiring: bool = "no_hiring" in directives
+	var has_must_hire_ahmet: bool = "must_hire_ahmet" in directives
+
+	# If must_hire_ahmet, create the specific Ahmet Yılmaz candidate
+	if has_must_hire_ahmet:
+		var ahmet: CandidateData = _create_ahmet_yilmaz(base_seed)
+		ahmet.is_valid_hire = true
+		candidates.append(ahmet)
+		num -= 1
+
+	# On no_hiring days, nobody else is hireable
+	var hire_count: int = 0 if has_no_hiring else maxi(1, int(num * randf_range(0.35, 0.6)))
 	var reject_count: int = num - hire_count
 
 	# Generate hireable candidates
 	for i in range(hire_count):
-		var c: CandidateData = generate_candidate(base_seed + i, day)
+		var c: CandidateData = generate_candidate(base_seed + 100 + i, day)
 		_ensure_directive_compliance(c, directives)
 		c.is_valid_hire = true
 		candidates.append(c)
 
 	# Generate rejectable candidates
 	for i in range(reject_count):
-		var c: CandidateData = generate_candidate(base_seed + hire_count + i, day)
-		_apply_directive_violation(c, directives)
-		c.is_valid_hire = false
+		var c: CandidateData = generate_candidate(base_seed + 200 + i, day)
+		if has_no_hiring:
+			c.is_valid_hire = false
+			c.rejection_reasons.append("Bugün alım yok — bütçe kesildi")
+		else:
+			_apply_directive_violation(c, directives)
+			c.is_valid_hire = false
 		candidates.append(c)
 
 	# Inject inconsistencies into a subset
@@ -474,11 +488,42 @@ static func generate_candidates_for_day(day: int, directives: Array[String], num
 	var shuffled: Array[CandidateData] = candidates.duplicate()
 	shuffled.shuffle()
 	for i in range(mini(inc_count, shuffled.size())):
-		inject_inconsistency(shuffled[i], inc_types[randi() % inc_types.size()])
+		var target: CandidateData = shuffled[i]
+		# Don't inject inconsistencies into special candidates (Ahmet, CEO nephew)
+		if target.special_event_id != "":
+			continue
+		inject_inconsistency(target, inc_types[randi() % inc_types.size()])
+
+	# Mark candidates with document inconsistencies as invalid hires
+	for c: CandidateData in candidates:
+		if c.inconsistencies.size() > 0 and c.is_valid_hire:
+			c.is_valid_hire = false
+			c.rejection_reasons.append("Belgelerde tutarsızlık")
 
 	# Shuffle order
 	candidates.shuffle()
 	return candidates
+
+static func _create_ahmet_yilmaz(base_seed: int) -> CandidateData:
+	var c: CandidateData = generate_candidate(base_seed + 9999, 4)
+	c.candidate_name = "Ahmet Yılmaz"
+	c.gender = "E"
+	c.is_union_candidate = true
+	c.special_event_id = "must_hire_ahmet"
+	c.experience_years = randi_range(3, 6)
+	c.greeting = "Merhaba. Sendika gönderdi beni. İşe alınacağım söylendi."
+	c.reaction_hired = "Teşekkürler. Sendika haklıymış, her şey yoluna girdi."
+	c.reaction_rejected = "Bunu sendika duyarsa... Grev kaçınılmaz olur."
+	c.interview_lines = [
+		"Sendika temsilcisiyim aslında. Hakları biliyorum.",
+		str(c.experience_years) + " yıllık deneyimim var.",
+		"Bu pozisyon için gayet uygunum.",
+	]
+	# Rebuild documents with correct name
+	c.documents.clear()
+	_generate_documents(c)
+	c.documents[0].content["Deneyim"] = str(c.experience_years) + " yıl"
+	return c
 
 static func _ensure_directive_compliance(c: CandidateData, directives: Array[String]) -> void:
 	for d: String in directives:

@@ -1,6 +1,6 @@
 extends Control
 ## Document inspection panel with tab buttons for switching between document types.
-## Enhanced with slide-in animations and paper texture feel.
+## Enhanced with fade animations and paper texture feel.
 
 @onready var tab_container: HBoxContainer = %DocTabs
 @onready var content_panel: PanelContainer = %DocContent
@@ -30,37 +30,32 @@ func load_documents(documents: Array[Resource]) -> void:
 	for child: Node in tab_container.get_children():
 		child.queue_free()
 
-	# Create tab buttons with staggered animation
+	# Create tab buttons with staggered fade-in
 	for i in range(documents.size()):
 		var doc: DocumentData = documents[i] as DocumentData
 		if doc == null:
 			continue
 		var btn: Button = Button.new()
 		btn.text = DOC_TYPE_NAMES.get(doc.doc_type, doc.doc_type)
-		btn.custom_minimum_size = Vector2(90, 28)
-		btn.add_theme_font_size_override("font_size", 11)
+		btn.custom_minimum_size = Vector2(72, 26)
+		btn.add_theme_font_size_override("font_size", 10)
 		var idx: int = i
 		btn.pressed.connect(func() -> void: _show_document(idx))
 		tab_container.add_child(btn)
 
-		# Tab buttons slide in from top
+		# Fade-in with scale pop (avoid position tweens on layout children)
 		btn.modulate.a = 0.0
-		btn.position.y = -15.0
 		var tab_tween: Tween = create_tween()
 		tab_tween.tween_interval(i * 0.08)
 		tab_tween.tween_property(btn, "modulate:a", 1.0, 0.2)
-		tab_tween.parallel().tween_property(btn, "position:y", 0.0, 0.2).set_ease(Tween.EASE_OUT)
 
-	# Show first document with paper slide-in
+	# Show first document with fade-in
 	content_panel.visible = true
 	if documents.size() > 0:
-		# Paper appears from below
 		content_panel.modulate.a = 0.0
-		content_panel.position.y = 30.0
 		var panel_tween: Tween = create_tween()
 		panel_tween.tween_interval(0.15)
-		panel_tween.tween_property(content_panel, "modulate:a", 1.0, 0.25)
-		panel_tween.parallel().tween_property(content_panel, "position:y", 0.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		panel_tween.tween_property(content_panel, "modulate:a", 1.0, 0.3)
 		panel_tween.tween_callback(func() -> void: _show_document(0))
 
 func _show_document(index: int) -> void:
@@ -89,21 +84,17 @@ func _show_document(index: int) -> void:
 		"id_card":
 			text = _format_id_card(doc)
 
-	# Animate content swap if switching tabs
+	# Animate content swap if switching tabs (alpha only, no position)
 	if _content_tween and _content_tween.is_valid():
 		_content_tween.kill()
 
 	if not same_tab:
 		_content_tween = create_tween()
-		# Quick fade out of old content
 		_content_tween.tween_property(content_label, "modulate:a", 0.0, 0.08)
 		_content_tween.tween_callback(func() -> void:
 			content_label.text = text
 		)
-		# Slide in new content from right
-		_content_tween.tween_property(content_label, "position:x", 12.0, 0.0)
 		_content_tween.tween_property(content_label, "modulate:a", 1.0, 0.15)
-		_content_tween.parallel().tween_property(content_label, "position:x", 0.0, 0.15).set_ease(Tween.EASE_OUT)
 	else:
 		content_label.text = text
 
@@ -172,14 +163,12 @@ func clear_documents() -> void:
 		_content_tween.kill()
 	for child: Node in tab_container.get_children():
 		child.queue_free()
-	# Slide paper out
+	# Fade paper out (no position tweens — causes layout overlap)
 	if content_panel.visible:
 		var tween: Tween = create_tween()
 		tween.tween_property(content_panel, "modulate:a", 0.0, 0.15)
-		tween.parallel().tween_property(content_panel, "position:y", 20.0, 0.15)
 		tween.tween_callback(func() -> void:
 			content_panel.visible = false
-			content_panel.position.y = 0.0
 			content_panel.modulate.a = 1.0
 			content_label.text = ""
 		)

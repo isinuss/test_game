@@ -114,6 +114,7 @@ func _populate() -> void:
 		continue_button.text = "SONRAKİ GÜN →"
 
 func _on_continue() -> void:
+	AudioManager.play_sfx("ui_click")
 	continue_button.disabled = true
 	GameManager.advance_day()
 	if GameManager.state == GameManager.GameState.GAME_OVER:

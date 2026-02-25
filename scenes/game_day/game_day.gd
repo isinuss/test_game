@@ -2,6 +2,8 @@ extends Control
 ## Core gameplay scene. Orchestrates the split-screen day flow:
 ## Top: booth with walking characters. Bottom: desk with documents + stamps.
 
+signal _event_popup_dismissed
+
 @onready var booth_view: Control = %BoothView
 @onready var document_view: Control = %DocumentView
 @onready var directive_panel: PanelContainer = %DirectivePanel
@@ -10,6 +12,7 @@ extends Control
 
 var _waiting_for_next: bool = false
 var _day_over: bool = false
+var _used_random_events: Array[String] = []
 
 func _ready() -> void:
 	GameManager.start_day()
@@ -43,8 +46,11 @@ func _ready() -> void:
 	AudioManager.stop_music()
 	AudioManager.play_ambient()
 
-	# Check for day-start events
-	_check_day_start_events()
+	# Check for violation redemption (rare random event)
+	await _check_violation_redemption()
+
+	# Check for day-start events (blocking — waits for player to dismiss)
+	await _check_day_start_events()
 
 	# Start with first candidate after brief delay
 	await get_tree().create_timer(0.5).timeout
@@ -105,12 +111,24 @@ func _insert_event_candidates() -> void:
 				else:
 					GameManager.candidates_today.append(nephew)
 
+func _check_violation_redemption() -> void:
+	if GameManager.violations <= 0 or GameManager.current_day <= 1:
+		return
+	# ~20% chance per existing violation (capped at 60%)
+	var chance: float = minf(0.2 * GameManager.violations, 0.6)
+	if randf() < chance:
+		GameManager.violations -= 1
+		var event: Dictionary = EventPool.get_event("violation_redemption")
+		_show_event_popup(event)
+		await _event_popup_dismissed
+
 func _check_day_start_events() -> void:
 	var config: Dictionary = GameManager.get_day_config()
 	for event_id: String in config.get("events", []):
 		var event: Dictionary = EventPool.get_event(event_id)
 		if event.get("trigger", "") == "day_start" and event.get("blocking", false):
 			_show_event_popup(event)
+			await _event_popup_dismissed
 
 func _show_event_popup(event: Dictionary) -> void:
 	# Create a simple modal popup with fade-in
@@ -188,10 +206,13 @@ func _show_event_popup(event: Dictionary) -> void:
 			if flag_key != "":
 				GameManager.set_flag(flag_key, choice_data.get("value", true))
 			EventBus.event_choice_made.emit(ev_id, i)
-			# Fade out popup
+			# Fade out popup then signal dismissal
 			var close_tween: Tween = create_tween()
 			close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
-			close_tween.tween_callback(func() -> void: overlay.queue_free())
+			close_tween.tween_callback(func() -> void:
+				overlay.queue_free()
+				_event_popup_dismissed.emit()
+			)
 		)
 		# Stagger button appearance
 		btn.modulate.a = 0.0
@@ -214,7 +235,7 @@ func _present_next_candidate() -> void:
 		return
 
 	# Check for mid-candidate events
-	_check_candidate_events()
+	await _check_candidate_events()
 
 func _check_candidate_events() -> void:
 	var config: Dictionary = GameManager.get_day_config()
@@ -225,6 +246,7 @@ func _check_candidate_events() -> void:
 			var trigger_idx: int = trigger.split("_")[1].to_int() - 1
 			if trigger_idx == GameManager.current_candidate_index:
 				_show_event_popup(event)
+				await _event_popup_dismissed
 
 func _on_documents_received() -> void:
 	var candidate: CandidateData = GameManager.get_current_candidate() as CandidateData
@@ -253,11 +275,25 @@ func _on_stamp_decision(hired: bool) -> void:
 	if _day_over:
 		return
 
-	# Check for day-end events
-	_check_day_end_events()
+	# Check for day-end events (blocking — waits for player dismissal)
+	var had_day_end: bool = await _check_day_end_events()
+
+	# Random event between candidates (~25% chance, max 1 per unique event per day)
+	if not _day_over and not had_day_end and randf() < 0.25:
+		var rand_event: Dictionary = EventPool.get_random_event(GameManager.current_day)
+		var rand_id: String = rand_event.get("id", "")
+		if rand_id != "" and rand_id not in _used_random_events:
+			_used_random_events.append(rand_id)
+			_show_event_popup(rand_event)
+			await _event_popup_dismissed
+			# Apply time penalty if any
+			var penalty: float = rand_event.get("time_penalty", 0.0)
+			if penalty > 0.0:
+				GameManager.day_time_remaining -= penalty
+
 	_present_next_candidate()
 
-func _check_day_end_events() -> void:
+func _check_day_end_events() -> bool:
 	# Check if we're at the last candidate and there's a day_end event
 	if GameManager.current_candidate_index >= GameManager.candidates_today.size() - 1:
 		var config: Dictionary = GameManager.get_day_config()
@@ -265,6 +301,9 @@ func _check_day_end_events() -> void:
 			var event: Dictionary = EventPool.get_event(event_id)
 			if event.get("trigger", "") == "day_end":
 				_show_event_popup(event)
+				await _event_popup_dismissed
+				return true
+	return false
 
 func _on_drawer_pressed() -> void:
 	AudioManager.play_sfx("ui_click")
