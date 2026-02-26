@@ -18,6 +18,18 @@ signal violation_received(reason: String)
 signal event_triggered(event_id: String)
 signal event_choice_made(event_id: String, choice_index: int)
 
+# Interrogation
+signal interrogation_requested(inconsistency_type: String, detail: String, doc_index: int)
+signal interrogation_resolved(was_guilty: bool, player_correct: bool)
+
+# Phone system
+signal phone_ringing(call_data: Dictionary)
+signal phone_answered(call_data: Dictionary)
+signal phone_ignored(call_data: Dictionary)
+
+# Stress
+signal stress_changed(new_stress: float)
+
 # UI
 signal directive_changed()
 signal money_changed(new_amount: int)

@@ -157,6 +157,109 @@ const INTERVIEW_EXTRAS: Array[String] = [
 	"Bu şehre yeni taşındım, burada kalıcı bir iş arıyorum.",
 ]
 
+# Interrogation responses when player confronts candidate about document inconsistencies.
+# Each type has "guilty" (candidate is lying) and "innocent" (false alarm) variants.
+const INTERROGATION_RESPONSES: Dictionary = {
+	"name_mismatch": {
+		"question": "Belgelerinizdeki isimler uyuşmuyor. Nasıl açıklarsınız?",
+		"guilty": [
+			"Ş-şey... evlendim, soyadım değişti... Ama belgeleri güncellemedim.",
+			"Aslında... bir yanlışlık olmuş. Diplomadaki isim... eski ismim.",
+			"Bakın, karışık bir durum. Ama inanın niyetim kötü değildi.",
+		],
+		"innocent": [
+			"Evlendim ve soyadım değişti. Kimliğimi güncelledim ama diploma eski kaldı.",
+		],
+	},
+	"date_mismatch": {
+		"question": "Mezuniyet yılınız belgelerde farklı görünüyor. Hangisi doğru?",
+		"guilty": [
+			"Bir yıl erken yazdım... Daha tecrübeli görünmek istedim.",
+			"Aslında... doğrusu diplomadaki. CV'de hata yapmışım.",
+			"Şey... uzatmalı mezun oldum, hangisini yazsam bilemedim.",
+		],
+		"innocent": [
+			"Hazırlık sınıfı sayılıyor mu bilmiyordum. İkisi de doğru aslında.",
+		],
+	},
+	"university_mismatch": {
+		"question": "CV'nizdeki ve diplomadaki üniversiteler farklı. Neden?",
+		"guilty": [
+			"Yatay geçiş yaptım... Yani, aslında... İlk üniversiteden ayrıldım.",
+			"İtiraf etmeliyim, daha prestijli bir isim yazdım CV'ye.",
+			"O üniversiteyi... tanıdığım önerdi yazmamı. Hata ettim.",
+		],
+		"innocent": [
+			"Üniversitem isim değiştirdi. Eski ve yeni isim farklı görünebilir.",
+		],
+	},
+	"experience_inflation": {
+		"question": "Deneyim yılınız mezuniyet tarihinizle uyuşmuyor. Açıklar mısınız?",
+		"guilty": [
+			"Staj dönemimi de saydım... Biraz abartmış olabilirim.",
+			"Freelance işleri de ekledim. Belki de eklememeliyidm.",
+			"Dürüst olayım, biraz şişirdim. Herkes yapıyor sandım.",
+		],
+		"innocent": [
+			"Üniversitedeyken yarı zamanlı çalışıyordum. O süreyi de saydım.",
+		],
+	},
+	"fake_reference": {
+		"question": "Referans şirketiniz çalışma geçmişinizde yok. Bu nasıl olabilir?",
+		"guilty": [
+			"O şirkette... danışman olarak çalıştım. Resmi kayıtta yoktur.",
+			"Aslında... bir arkadaşım referans oldu. Şirket adını ben uydurdum.",
+			"İtiraf edeyim, referansı ben ayarladım. Kötü bir fikir olmuş.",
+		],
+		"innocent": [
+			"Taşeron olarak çalıştım. Resmi kayıtlarda ana firma görünür.",
+		],
+	},
+	"fake_university": {
+		"question": "Bu üniversiteyi bulamıyorum kayıtlarda. Gerçek mi?",
+		"guilty": [
+			"O üniversite... kapandı galiba. Yani, açıkçası...",
+			"Online bir programdı. Akredite değilmiş, sonra öğrendim.",
+			"Diploma... satın aldım. Çok pişmanım.",
+		],
+		"innocent": [
+			"Yeni açılan bir üniversite, kayıtları henüz tam güncellenmemiş.",
+		],
+	},
+	"gpa_mismatch": {
+		"question": "Not ortalamanız belgelerde farklı. Hangisi gerçek?",
+		"guilty": [
+			"CV'ye yuvarladım biraz... Diplomadaki resmi not.",
+			"Daha yüksek yazdım, kabul ediyorum. Diplomadaki doğru.",
+			"İkisi arasında fark mı var? Şey... diplomadaki kesin doğrudur.",
+		],
+		"innocent": [
+			"Bölüm ortalaması ve genel ortalama farklı. İkisi de doğru.",
+		],
+	},
+	"tc_invalid": {
+		"question": "TC Kimlik numaranız doğrulanmıyor. Kontrol eder misiniz?",
+		"guilty": [
+			"Numarayı ezberden yazdım, hata yapmış olabilirim... Ya da...",
+			"Aslında... Bu kimlik benim değil. Uzun bir hikaye.",
+			"Bir basamağı yanlış yazmışım... Şey, aslında bilmiyorum neden.",
+		],
+		"innocent": [
+			"Yeni çıkarılan kimliğim, numaram değişmiş olabilir. Kontrol edeyim.",
+		],
+	},
+	"address_mismatch": {
+		"question": "CV'nizdeki şehir ile kimliğinizdeki şehir farklı. Neden?",
+		"guilty": [
+			"Aslında... CV'deki adres güncel değil. Taşınmadım aslında.",
+			"İstanbul'da yaşadığımı yazdım ama... Henüz taşınmadım.",
+		],
+		"innocent": [
+			"Yeni taşındım, kimliğimi henüz güncellemedim.",
+		],
+	},
+}
+
 const DOCUMENT_HANDOVERS: Array[String] = [
 	"Buyrun, belgelerim burada.",
 	"İşte dosyam, her şey tamam olmalı.",

@@ -9,6 +9,7 @@ extends Control
 
 var _waiting_for_next: bool = false
 var _day_over: bool = false
+var _phone_triggered: Dictionary = {}  # Track which phone calls already fired
 
 func _ready() -> void:
 	GameManager.start_day()
@@ -32,6 +33,7 @@ func _ready() -> void:
 	directive_panel.load_directives(GameManager.current_day)
 	stamp_area.stamp_pressed.connect(_on_stamp_decision)
 	EventBus.documents_received.connect(_on_documents_received)
+	EventBus.interrogation_requested.connect(_on_interrogation_requested)
 
 	# Check for day-start events
 	_check_day_start_events()
@@ -62,6 +64,9 @@ func _process(delta: float) -> void:
 		remaining_candidates,
 		GameManager.violations,
 	)
+
+	# Check for phone calls based on time remaining
+	_check_phone_calls()
 
 func _insert_event_candidates() -> void:
 	var config: Dictionary = GameManager.get_day_config()
@@ -403,3 +408,270 @@ func _end_day() -> void:
 	GameManager.set_flag("_last_summary", summary)
 	await get_tree().create_timer(1.5).timeout
 	ScreenTransition.transition_to("res://scenes/day_summary/day_summary.tscn")
+
+# ═══════════ INTERROGATION SYSTEM ═══════════
+
+func _on_interrogation_requested(inconsistency_type: String, detail: String, doc_index: int) -> void:
+	var candidate: CandidateData = GameManager.get_current_candidate() as CandidateData
+	if candidate == null:
+		return
+
+	var responses: Dictionary = CandidatePool.INTERROGATION_RESPONSES.get(inconsistency_type, {})
+	if responses.is_empty():
+		return
+
+	var question: String = responses.get("question", "Bu belge hakkında bir açıklamanız var mı?")
+
+	# Determine if this candidate actually has this inconsistency (is guilty)
+	var is_guilty: bool = candidate.inconsistencies.size() > 0
+
+	# Pick a response
+	var response_pool: Array
+	if is_guilty:
+		response_pool = responses.get("guilty", ["Şey... açıklayabilirim."])
+	else:
+		response_pool = responses.get("innocent", ["Her şey düzgün olmalı."])
+	var response: String = response_pool[randi() % response_pool.size()]
+
+	_show_interrogation_popup(question, response, is_guilty, candidate)
+
+func _show_interrogation_popup(question: String, response: String, is_guilty: bool, candidate: CandidateData) -> void:
+	# Dark overlay
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0)
+	overlay.anchors_preset = Control.PRESET_FULL_RECT
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var overlay_tween: Tween = create_tween()
+	overlay_tween.tween_property(overlay, "color:a", 0.7, 0.3)
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.anchors_preset = Control.PRESET_CENTER
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.offset_left = -280
+	panel.offset_top = -160
+	panel.offset_right = 280
+	panel.offset_bottom = 160
+	panel.scale = Vector2(0.8, 0.8)
+	panel.modulate.a = 0.0
+	panel.pivot_offset = Vector2(280, 160)
+	overlay.add_child(panel)
+
+	var panel_tween: Tween = create_tween()
+	panel_tween.tween_interval(0.2)
+	panel_tween.tween_property(panel, "modulate:a", 1.0, 0.2)
+	panel_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	panel.add_child(margin)
+
+	var inner_vbox: VBoxContainer = VBoxContainer.new()
+	inner_vbox.add_theme_constant_override("separation", 6)
+	margin.add_child(inner_vbox)
+
+	# Title
+	var title_lbl: Label = Label.new()
+	title_lbl.text = "SORGU"
+	title_lbl.add_theme_font_size_override("font_size", 16)
+	title_lbl.add_theme_color_override("font_color", Color(0.9, 0.7, 0.2))
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inner_vbox.add_child(title_lbl)
+
+	# Your question
+	var q_lbl: Label = Label.new()
+	q_lbl.text = "Siz: \"" + question + "\""
+	q_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	q_lbl.add_theme_font_size_override("font_size", 11)
+	q_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
+	inner_vbox.add_child(q_lbl)
+
+	# Candidate response
+	var r_lbl: Label = Label.new()
+	r_lbl.text = candidate.candidate_name + ": \"" + response + "\""
+	r_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	r_lbl.add_theme_font_size_override("font_size", 11)
+	if is_guilty:
+		r_lbl.add_theme_color_override("font_color", Color(0.9, 0.75, 0.65))
+	else:
+		r_lbl.add_theme_color_override("font_color", Color(0.75, 0.9, 0.75))
+	r_lbl.modulate.a = 0.0
+	inner_vbox.add_child(r_lbl)
+
+	# Reveal response after a beat
+	var resp_tween: Tween = create_tween()
+	resp_tween.tween_interval(0.8)
+	resp_tween.tween_property(r_lbl, "modulate:a", 1.0, 0.3)
+
+	var spacer: Control = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 6)
+	inner_vbox.add_child(spacer)
+
+	# Player choices
+	var believe_btn: Button = Button.new()
+	believe_btn.text = "İnanıyorum — belgeler doğru"
+	believe_btn.custom_minimum_size = Vector2(0, 30)
+	believe_btn.modulate.a = 0.0
+	inner_vbox.add_child(believe_btn)
+
+	var suspect_btn: Button = Button.new()
+	suspect_btn.text = "Şüpheli — yalan söylüyor"
+	suspect_btn.custom_minimum_size = Vector2(0, 30)
+	suspect_btn.modulate.a = 0.0
+	inner_vbox.add_child(suspect_btn)
+
+	# Stagger button appearance
+	var btn_tween: Tween = create_tween()
+	btn_tween.tween_interval(1.5)
+	btn_tween.tween_property(believe_btn, "modulate:a", 1.0, 0.2)
+	btn_tween.tween_interval(0.15)
+	btn_tween.tween_property(suspect_btn, "modulate:a", 1.0, 0.2)
+
+	believe_btn.pressed.connect(func() -> void:
+		var player_correct: bool = not is_guilty  # Believed, and they're innocent
+		if not player_correct:
+			# Player was fooled by a liar
+			pass
+		else:
+			GameManager.career_points += 5
+		EventBus.interrogation_resolved.emit(is_guilty, player_correct)
+		var close_tween: Tween = create_tween()
+		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+		close_tween.tween_callback(func() -> void: overlay.queue_free())
+	)
+
+	suspect_btn.pressed.connect(func() -> void:
+		var player_correct: bool = is_guilty  # Suspected, and they ARE guilty
+		if player_correct:
+			GameManager.career_points += 15
+			GameManager.money += 200
+			EventBus.money_changed.emit(GameManager.money)
+		else:
+			# Falsely accused an innocent candidate
+			GameManager.add_stress(0.05)
+		EventBus.interrogation_resolved.emit(is_guilty, player_correct)
+		var close_tween: Tween = create_tween()
+		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+		close_tween.tween_callback(func() -> void: overlay.queue_free())
+	)
+
+# ═══════════ PHONE CALL SYSTEM ═══════════
+
+func _check_phone_calls() -> void:
+	var config: Dictionary = GameManager.get_day_config()
+	var calls: Array = config.get("phone_calls", [])
+	for i in range(calls.size()):
+		var call_data: Dictionary = calls[i]
+		var trigger_time: float = call_data.get("time_trigger", 0.0)
+		var call_key: String = str(GameManager.current_day) + "_" + str(i)
+		if call_key in _phone_triggered:
+			continue
+		if GameManager.day_time_remaining <= trigger_time:
+			_phone_triggered[call_key] = true
+			_show_phone_call(call_data)
+
+func _show_phone_call(call_data: Dictionary) -> void:
+	var caller: String = call_data.get("caller", "Bilinmeyen")
+	var text: String = call_data.get("text", "")
+	var flag: String = call_data.get("flag", "")
+
+	# Create phone popup overlay
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0)
+	overlay.anchors_preset = Control.PRESET_FULL_RECT
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var overlay_tween: Tween = create_tween()
+	overlay_tween.tween_property(overlay, "color:a", 0.5, 0.2)
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.anchors_preset = Control.PRESET_CENTER
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.offset_left = -200
+	panel.offset_top = -100
+	panel.offset_right = 200
+	panel.offset_bottom = 100
+	panel.scale = Vector2(0.8, 0.8)
+	panel.modulate.a = 0.0
+	panel.pivot_offset = Vector2(200, 100)
+	overlay.add_child(panel)
+
+	# Ring animation
+	var ring_tween: Tween = create_tween().set_loops(3)
+	ring_tween.tween_property(panel, "rotation", 0.03, 0.05)
+	ring_tween.tween_property(panel, "rotation", -0.03, 0.05)
+	ring_tween.tween_property(panel, "rotation", 0.0, 0.05)
+
+	var show_tween: Tween = create_tween()
+	show_tween.tween_property(panel, "modulate:a", 1.0, 0.15)
+	show_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	panel.add_child(margin)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	margin.add_child(vbox)
+
+	var title_lbl: Label = Label.new()
+	title_lbl.text = "TELEFON — " + caller.to_upper()
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 0.4))
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title_lbl)
+
+	var text_lbl: Label = Label.new()
+	text_lbl.text = "\"" + text + "\""
+	text_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text_lbl.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(text_lbl)
+
+	var answer_btn: Button = Button.new()
+	answer_btn.text = "Telefonu kapat"
+	answer_btn.custom_minimum_size = Vector2(0, 28)
+	vbox.add_child(answer_btn)
+
+	var ignore_btn: Button = Button.new()
+	ignore_btn.text = "Görmezden gel"
+	ignore_btn.custom_minimum_size = Vector2(0, 28)
+	vbox.add_child(ignore_btn)
+
+	answer_btn.pressed.connect(func() -> void:
+		if flag != "":
+			GameManager.set_flag(flag)
+		EventBus.phone_answered.emit(call_data)
+		GameManager.add_stress(0.03)
+		var close_tween: Tween = create_tween()
+		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+		close_tween.tween_callback(func() -> void: overlay.queue_free())
+	)
+
+	ignore_btn.pressed.connect(func() -> void:
+		EventBus.phone_ignored.emit(call_data)
+		var close_tween: Tween = create_tween()
+		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+		close_tween.tween_callback(func() -> void: overlay.queue_free())
+	)
+
+	# Auto-dismiss after 10 seconds if player ignores
+	var auto_tween: Tween = create_tween()
+	auto_tween.tween_interval(10.0)
+	auto_tween.tween_callback(func() -> void:
+		if is_instance_valid(overlay) and overlay.is_inside_tree():
+			EventBus.phone_ignored.emit(call_data)
+			var close_tween: Tween = create_tween()
+			close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+			close_tween.tween_callback(func() -> void:
+				if is_instance_valid(overlay):
+					overlay.queue_free()
+			)
+	)

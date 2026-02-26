@@ -1,6 +1,7 @@
 extends Control
 ## Document inspection panel with tab buttons for switching between document types.
-## Enhanced with slide-in animations and paper texture feel.
+## Enhanced with slide-in animations, paper texture feel, and clickable suspicious fields.
+## Clicking a suspicious field triggers an interrogation sequence.
 
 @onready var tab_container: HBoxContainer = %DocTabs
 @onready var content_panel: PanelContainer = %DocContent
@@ -16,10 +17,20 @@ const DOC_TYPE_NAMES: Dictionary = {
 	"diploma": "DİPLOMA",
 	"reference": "REFERANS",
 	"id_card": "KİMLİK",
+	"criminal_record": "SABIKA KAYDI",
+	"health_report": "SAĞLIK RAPORU",
 }
 
 func _ready() -> void:
 	content_panel.visible = false
+	content_label.bbcode_enabled = true
+	content_label.meta_clicked.connect(_on_meta_clicked)
+
+func _on_meta_clicked(meta: Variant) -> void:
+	# meta is the inconsistency info encoded as "type|detail|doc_index"
+	var parts: PackedStringArray = str(meta).split("|")
+	if parts.size() >= 3:
+		EventBus.interrogation_requested.emit(parts[0], parts[1], parts[2].to_int())
 
 func load_documents(documents: Array[Resource]) -> void:
 	_documents = documents
@@ -74,17 +85,21 @@ func _show_document(index: int) -> void:
 
 	doc_title_label.text = DOC_TYPE_NAMES.get(doc.doc_type, doc.doc_type)
 
-	# Build content
+	# Build content with BBCode
 	var text: String = ""
 	match doc.doc_type:
 		"cv":
-			text = _format_cv(doc)
+			text = _format_cv(doc, index)
 		"diploma":
-			text = _format_diploma(doc)
+			text = _format_diploma(doc, index)
 		"reference":
-			text = _format_reference(doc)
+			text = _format_reference(doc, index)
 		"id_card":
-			text = _format_id_card(doc)
+			text = _format_id_card(doc, index)
+		"criminal_record":
+			text = _format_criminal_record(doc, index)
+		"health_report":
+			text = _format_health_report(doc, index)
 
 	# Animate content swap if switching tabs
 	if _content_tween and _content_tween.is_valid():
@@ -113,54 +128,130 @@ func _show_document(index: int) -> void:
 			else:
 				btn.remove_theme_color_override("font_color")
 
-func _format_cv(doc: DocumentData) -> String:
+## Wraps a value in a clickable BBCode link if the document has an inconsistency.
+func _make_suspicious(value: String, doc: DocumentData, doc_index: int) -> String:
+	if doc.has_inconsistency:
+		var meta: String = doc.inconsistency_type + "|" + doc.inconsistency_detail + "|" + str(doc_index)
+		return "[color=#c87533][url=" + meta + "]" + value + "[/url][/color]"
+	return value
+
+## Format a specific field as suspicious if it matches the inconsistency type's affected field.
+func _suspicious_field(key: String, value: String, doc: DocumentData, doc_index: int, affected_keys: Array[String]) -> String:
+	if doc.has_inconsistency and key in affected_keys:
+		var meta: String = doc.inconsistency_type + "|" + doc.inconsistency_detail + "|" + str(doc_index)
+		return "[color=#c87533][url=" + meta + "]" + value + "[/url][/color]"
+	return value
+
+func _get_affected_keys(inc_type: String) -> Array[String]:
+	match inc_type:
+		"name_mismatch":
+			return ["Öğrenci Adı", "Ad Soyad"]
+		"date_mismatch":
+			return ["Mezuniyet", "Mezuniyet Yılı"]
+		"university_mismatch":
+			return ["Üniversite"]
+		"experience_inflation":
+			return ["Deneyim"]
+		"fake_reference":
+			return ["Şirket"]
+		"fake_university":
+			return ["Üniversite"]
+		"gpa_mismatch":
+			return ["Not Ortalaması"]
+		"tc_invalid":
+			return ["TC Kimlik No"]
+		"address_mismatch":
+			return ["Şehir", "İl"]
+		_:
+			return []
+
+func _format_cv(doc: DocumentData, doc_index: int) -> String:
+	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "═══════════════════════\n"
 	t += "     ÖZGEÇMİŞ\n"
 	t += "═══════════════════════\n\n"
 	for key: String in doc.content:
-		t += key + ": " + str(doc.content[key]) + "\n"
+		var val: String = str(doc.content[key])
+		val = _suspicious_field(key, val, doc, doc_index, affected)
+		t += key + ": " + val + "\n"
 	return t
 
-func _format_diploma(doc: DocumentData) -> String:
+func _format_diploma(doc: DocumentData, doc_index: int) -> String:
+	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "╔═══════════════════════╗\n"
 	t += "║      DİPLOMA          ║\n"
 	t += "╚═══════════════════════╝\n\n"
-	var uni: String = doc.content.get("Üniversite", "")
+	var uni: String = _suspicious_field("Üniversite", doc.content.get("Üniversite", ""), doc, doc_index, affected)
 	t += "  " + uni + "\n"
 	t += "  ─────────────────\n\n"
-	t += "  Öğrenci: " + doc.content.get("Öğrenci Adı", "") + "\n"
+	var name_val: String = _suspicious_field("Öğrenci Adı", doc.content.get("Öğrenci Adı", ""), doc, doc_index, affected)
+	t += "  Öğrenci: " + name_val + "\n"
 	t += "  Bölüm: " + doc.content.get("Bölüm", "") + "\n"
-	t += "  Yıl: " + str(doc.content.get("Mezuniyet Yılı", "")) + "\n"
-	t += "  GNO: " + str(doc.content.get("Not Ortalaması", "")) + "\n"
+	var year_val: String = _suspicious_field("Mezuniyet Yılı", str(doc.content.get("Mezuniyet Yılı", "")), doc, doc_index, affected)
+	t += "  Yıl: " + year_val + "\n"
+	var gpa_val: String = _suspicious_field("Not Ortalaması", str(doc.content.get("Not Ortalaması", "")), doc, doc_index, affected)
+	t += "  GNO: " + gpa_val + "\n"
 	t += "\n         [MÜHÜR]\n"
 	return t
 
-func _format_reference(doc: DocumentData) -> String:
+func _format_reference(doc: DocumentData, doc_index: int) -> String:
+	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "───── REFERANS MEKTUBU ─────\n\n"
 	t += "Kimden: " + doc.content.get("Referans Veren", "") + "\n"
-	t += "Şirket: " + doc.content.get("Şirket", "") + "\n"
+	var company_val: String = _suspicious_field("Şirket", doc.content.get("Şirket", ""), doc, doc_index, affected)
+	t += "Şirket: " + company_val + "\n"
 	t += "─────────────────────────\n\n"
 	t += doc.content.get("Değerlendirme", "") + "\n"
 	t += "\n─────────────────────────\n"
 	t += "İmza: " + doc.content.get("Referans Veren", "") + "\n"
 	return t
 
-func _format_id_card(doc: DocumentData) -> String:
+func _format_id_card(doc: DocumentData, doc_index: int) -> String:
+	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "┌─────────────────────┐\n"
 	t += "│  T.C. KİMLİK KARTI  │\n"
 	t += "├─────────────────────┤\n"
 	t += "│                     │\n"
-	t += "│  TC No: " + doc.content.get("TC Kimlik No", "") + "\n"
+	var tc_val: String = _suspicious_field("TC Kimlik No", doc.content.get("TC Kimlik No", ""), doc, doc_index, affected)
+	t += "│  TC No: " + tc_val + "\n"
 	t += "│  Ad: " + doc.content.get("Ad Soyad", "") + "\n"
 	t += "│  Doğum: " + doc.content.get("Doğum Yılı", "") + "\n"
 	t += "│  Cinsiyet: " + doc.content.get("Cinsiyet", "") + "\n"
-	t += "│  İl: " + doc.content.get("İl", "") + "\n"
+	var city_val: String = _suspicious_field("İl", doc.content.get("İl", ""), doc, doc_index, affected)
+	t += "│  İl: " + city_val + "\n"
 	t += "│                     │\n"
 	t += "└─────────────────────┘\n"
+	return t
+
+func _format_criminal_record(doc: DocumentData, doc_index: int) -> String:
+	var t: String = ""
+	t += "┌─────────────────────────┐\n"
+	t += "│    SABIKA KAYDI         │\n"
+	t += "├─────────────────────────┤\n"
+	t += "│                         │\n"
+	t += "│  TC No: " + doc.content.get("TC Kimlik No", "") + "\n"
+	t += "│  Ad: " + doc.content.get("Ad Soyad", "") + "\n"
+	t += "│  Durum: " + doc.content.get("Durum", "Temiz") + "\n"
+	t += "│  Tarih: " + doc.content.get("Tarih", "") + "\n"
+	t += "│                         │\n"
+	t += "└─────────────────────────┘\n"
+	return t
+
+func _format_health_report(doc: DocumentData, doc_index: int) -> String:
+	var t: String = ""
+	t += "╔═════════════════════════╗\n"
+	t += "║    SAĞLIK RAPORU        ║\n"
+	t += "╚═════════════════════════╝\n\n"
+	t += "  Ad: " + doc.content.get("Ad Soyad", "") + "\n"
+	t += "  Durum: " + doc.content.get("Durum", "Sağlıklı") + "\n"
+	if doc.content.has("Engellilik Oranı"):
+		t += "  Engellilik: %" + str(doc.content.get("Engellilik Oranı", "0")) + "\n"
+	t += "  Tarih: " + doc.content.get("Tarih", "") + "\n"
+	t += "\n  [DOKTOR İMZASI]\n"
 	return t
 
 func clear_documents() -> void:
