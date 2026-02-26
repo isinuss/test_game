@@ -383,11 +383,11 @@ static func generate_candidate(seed_val: int, day: int) -> CandidateData:
 		c.interview_lines.append(shuffled_extras[i])
 
 	# Generate documents
-	_generate_documents(c)
+	_generate_documents(c, day)
 
 	return c
 
-static func _generate_documents(c: CandidateData) -> void:
+static func _generate_documents(c: CandidateData, day: int = 1) -> void:
 	# CV
 	var cv: DocumentData = DocumentData.new()
 	cv.doc_type = "cv"
@@ -450,6 +450,37 @@ static func _generate_documents(c: CandidateData) -> void:
 		"İl": c.city,
 	}
 	c.documents.append(id_card)
+
+	# Criminal Record (from Day 8 onwards)
+	if day >= 8:
+		var criminal: DocumentData = DocumentData.new()
+		criminal.doc_type = "criminal_record"
+		c.has_criminal_record = true
+		c.criminal_record_clean = randi() % 10 != 0  # 10% have a record
+		criminal.content = {
+			"TC Kimlik No": c.tc_kimlik_no,
+			"Ad Soyad": c.candidate_name,
+			"Durum": "Temiz" if c.criminal_record_clean else "Kaydı Var",
+			"Tarih": "2026",
+		}
+		c.documents.append(criminal)
+
+	# Health Report (from Day 11 onwards)
+	if day >= 11:
+		var health: DocumentData = DocumentData.new()
+		health.doc_type = "health_report"
+		c.has_health_report = true
+		var is_disabled: bool = randi() % 7 == 0  # ~15% chance
+		c.has_disability = is_disabled
+		c.health_report_fit = not is_disabled
+		health.content = {
+			"Ad Soyad": c.candidate_name,
+			"Durum": "Engelli" if is_disabled else "Sağlıklı",
+			"Tarih": "2026",
+		}
+		if is_disabled:
+			health.content["Engellilik Oranı"] = str(randi_range(20, 60))
+		c.documents.append(health)
 
 static func inject_inconsistency(c: CandidateData, inc_type: String) -> void:
 	match inc_type:
@@ -544,6 +575,40 @@ static func inject_inconsistency(c: CandidateData, inc_type: String) -> void:
 				c.documents[0].inconsistency_detail = "Not ortalaması belgeler arasında farklı"
 				c.inconsistencies.append("Not uyuşmazlığı: CV'de " + str(snapped(fake_gpa, 0.01)) + ", Diplomada " + str(c.gpa))
 
+		"address_mismatch":
+			# City on CV differs from city on ID card
+			var alt_city: String = CITIES[randi() % CITIES.size()]
+			while alt_city == c.city:
+				alt_city = CITIES[randi() % CITIES.size()]
+			c.documents[0].content["Şehir"] = alt_city
+			c.documents[0].has_inconsistency = true
+			c.documents[0].inconsistency_type = "address_mismatch"
+			c.documents[0].inconsistency_detail = "CV'deki şehir ile kimlik şehri farklı"
+			c.inconsistencies.append("Adres uyuşmazlığı: CV'de " + alt_city + ", Kimlikte " + c.city)
+
+		"employment_gap":
+			# Flag an unexplained employment gap
+			c.has_employment_gap = true
+			c.documents[0].has_inconsistency = true
+			c.documents[0].inconsistency_type = "employment_gap"
+			c.documents[0].inconsistency_detail = "İş geçmişinde açıklanamayan boşluk var"
+			c.inconsistencies.append("İstihdam boşluğu: 2+ yıl açıklanmamış dönem")
+
+		"duplicate_candidate":
+			# Same person applied before under a different name
+			c.is_returning_candidate = true
+			c.original_candidate_name = c.candidate_name
+			var alt_surname: String = SURNAMES[randi() % SURNAMES.size()]
+			var parts: PackedStringArray = c.candidate_name.split(" ")
+			if parts.size() >= 2:
+				c.candidate_name = parts[0] + " " + alt_surname
+				c.documents[0].content["Ad Soyad"] = c.candidate_name
+			c.inconsistencies.append("Yinelenen aday: Daha önce farklı isimle başvurmuş")
+
+		"photo_mismatch":
+			# Photo doesn't match the candidate — flag for visual cue
+			c.inconsistencies.append("Fotoğraf uyuşmazlığı: Fotoğraf adayla uyuşmuyor")
+
 static func generate_candidates_for_day(day: int, directives: Array[String], num: int, inconsistency_ratio: float) -> Array[CandidateData]:
 	var candidates: Array[CandidateData] = []
 	var base_seed: int = day * 1000 + randi() % 500
@@ -573,6 +638,14 @@ static func generate_candidates_for_day(day: int, directives: Array[String], num
 	if day >= 4:
 		inc_types.append("tc_invalid")
 		inc_types.append("fake_university")
+	if day >= 6:
+		inc_types.append("address_mismatch")
+	if day >= 7:
+		inc_types.append("employment_gap")
+	if day >= 8:
+		inc_types.append("photo_mismatch")
+	if day >= 11:
+		inc_types.append("duplicate_candidate")
 
 	var shuffled: Array[CandidateData] = candidates.duplicate()
 	shuffled.shuffle()

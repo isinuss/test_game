@@ -39,6 +39,10 @@ var _idle_time: float = 0.0
 var _character_base_x: float = 0.0
 var _character_arrived: bool = false
 
+# Stress effects
+var _stress_time: float = 0.0
+var _stress_glitch_timer: float = 0.0
+
 func _ready() -> void:
 	speech_panel.visible = false
 	receive_button.visible = false
@@ -65,6 +69,46 @@ func _process(delta: float) -> void:
 		_idle_time += delta
 		var sway: float = sin(_idle_time * 0.8) * 1.2
 		character.position.x = _character_base_x + sway
+
+	# Stress effects
+	_process_stress_effects(delta)
+
+func _process_stress_effects(delta: float) -> void:
+	var s: float = GameManager.stress
+	_stress_time += delta
+
+	# Stress >= 0.5: Status bar text jitters slightly
+	if s >= 0.5:
+		var jitter: float = sin(_stress_time * 10.0) * (s - 0.5) * 2.0
+		status_day.position.x = jitter
+		status_time.position.x = -jitter * 0.5
+	else:
+		status_day.position.x = 0.0
+		status_time.position.x = 0.0
+
+	# Stress >= 0.5: Clock hands pulse more intensely
+	if s >= 0.5 and GameManager.day_time_remaining < 60.0:
+		var clock_pulse: float = (sin(_stress_time * 4.0) + 1.0) * 0.5
+		var pulse_scale: float = 1.0 + clock_pulse * (s - 0.3) * 0.15
+		clock_hand_m.scale = Vector2(pulse_scale, pulse_scale)
+
+	# Stress >= 0.7: Character sprites occasionally "glitch"
+	if s >= 0.7:
+		_stress_glitch_timer += delta
+		if _stress_glitch_timer > 2.0 + randf() * 3.0:
+			_stress_glitch_timer = 0.0
+			if _character_arrived and is_instance_valid(character):
+				var glitch_tween: Tween = create_tween()
+				glitch_tween.tween_property(character, "modulate", Color(1.2, 0.8, 0.8), 0.04)
+				glitch_tween.tween_property(character, "modulate", Color.WHITE, 0.06)
+
+	# Stress >= 0.9: Full screen micro-shakes
+	if s >= 0.9:
+		var shake_x: float = sin(_stress_time * 20.0) * 1.5
+		var shake_y: float = cos(_stress_time * 25.0) * 1.0
+		var game_day: Node = get_tree().current_scene
+		if game_day:
+			game_day.position = Vector2(shake_x, shake_y)
 
 func _process_light_flicker(delta: float) -> void:
 	_flicker_timer += delta

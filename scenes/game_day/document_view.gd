@@ -11,6 +11,9 @@ extends Control
 var _documents: Array[Resource] = []
 var _current_tab: int = 0
 var _content_tween: Tween = null
+var _stress_time: float = 0.0
+var _content_panel_base_pos: Vector2 = Vector2.ZERO
+var _blur_timer: float = 0.0
 
 const DOC_TYPE_NAMES: Dictionary = {
 	"cv": "ÖZGEÇMİŞ",
@@ -25,6 +28,29 @@ func _ready() -> void:
 	content_panel.visible = false
 	content_label.bbcode_enabled = true
 	content_label.meta_clicked.connect(_on_meta_clicked)
+	_content_panel_base_pos = content_panel.position
+
+func _process(delta: float) -> void:
+	var s: float = GameManager.stress
+	_stress_time += delta
+
+	# Stress >= 0.3: Subtle hand tremor — document panel oscillates
+	if s >= 0.3 and content_panel.visible:
+		var tremor_intensity: float = (s - 0.3) * 4.0  # 0 to ~2.8
+		var offset_x: float = sin(_stress_time * 6.0) * tremor_intensity
+		var offset_y: float = cos(_stress_time * 8.0) * tremor_intensity * 0.5
+		content_panel.position = _content_panel_base_pos + Vector2(offset_x, offset_y)
+	elif content_panel.visible:
+		content_panel.position = _content_panel_base_pos
+
+	# Stress >= 0.5: Text occasionally blurs (alpha flicker)
+	if s >= 0.5:
+		_blur_timer += delta
+		if _blur_timer > 3.0 + randf() * 4.0:
+			_blur_timer = 0.0
+			var blur_tween: Tween = create_tween()
+			blur_tween.tween_property(content_label, "modulate:a", 0.4, 0.08)
+			blur_tween.tween_property(content_label, "modulate:a", 1.0, 0.15)
 
 func _on_meta_clicked(meta: Variant) -> void:
 	# meta is the inconsistency info encoded as "type|detail|doc_index"

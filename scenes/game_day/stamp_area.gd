@@ -37,6 +37,13 @@ func _on_hire() -> void:
 	if not _buttons_enabled:
 		return
 	set_buttons_enabled(false)
+	# Stress >= 0.7: Brief hesitation delay before stamp registers
+	var delay: float = 0.0
+	if GameManager.stress >= 0.7:
+		delay = 0.3 + (GameManager.stress - 0.7) * 1.0  # 0.3s to 0.6s
+		status_label.text = "..."
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
 	_play_stamp_animation(hire_button)
 	status_label.text = "İŞE ALINDI"
 	status_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.2))
@@ -48,6 +55,13 @@ func _on_reject() -> void:
 	if not _buttons_enabled:
 		return
 	set_buttons_enabled(false)
+	# Stress >= 0.7: Brief hesitation delay before stamp registers
+	var delay: float = 0.0
+	if GameManager.stress >= 0.7:
+		delay = 0.3 + (GameManager.stress - 0.7) * 1.0
+		status_label.text = "..."
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
 	_play_stamp_animation(reject_button)
 	status_label.text = "REDDEDİLDİ"
 	status_label.add_theme_color_override("font_color", Color(0.7, 0.15, 0.1))

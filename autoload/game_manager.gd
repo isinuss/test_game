@@ -16,6 +16,11 @@ var career_points: int = 0
 
 # Stress system
 var stress: float = 0.0
+const STRESS_PER_VIOLATION: float = 0.12
+const STRESS_PER_WRONG_ACCUSATION: float = 0.05
+const STRESS_FROM_TIME_PRESSURE: float = 0.002  # per second when < 30s remaining
+const STRESS_FROM_MORAL_DILEMMA: float = 0.08
+const STRESS_DECAY_PER_DAY: float = 0.05
 
 # Per-day tracking
 var candidates_today: Array = []
@@ -267,7 +272,7 @@ func start_day() -> void:
 	day_decisions = []
 	hired_today = 0
 	# Slight stress recovery between days
-	stress = maxf(0.0, stress - 0.05)
+	stress = maxf(0.0, stress - STRESS_DECAY_PER_DAY)
 	EventBus.day_started.emit(current_day)
 
 func get_current_candidate() -> Resource:
@@ -349,8 +354,12 @@ func end_day() -> Dictionary:
 			"reason": "Zaman doldu — otomatik red" if c.is_valid_hire else "",
 		})
 
-	# Base salary
+	# Base salary minus daily expenses (rent, commute)
 	money += 100
+	money -= 150  # Daily living expenses — keeps financial pressure
+	if money < 0:
+		# Debt causes extra stress
+		add_stress(0.06)
 
 	EventBus.day_ended.emit(current_day)
 

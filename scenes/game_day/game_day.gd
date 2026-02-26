@@ -54,6 +54,11 @@ func _process(delta: float) -> void:
 		_day_over = true
 		_end_day()
 
+	# Time pressure stress
+	if GameManager.day_time_remaining < 30.0 and GameManager.day_time_remaining > 0.0:
+		GameManager.add_stress(GameManager.STRESS_FROM_TIME_PRESSURE * delta)
+		EventBus.stress_changed.emit(GameManager.stress)
+
 	# Update status bar
 	var remaining_candidates: int = GameManager.candidates_today.size() - GameManager.current_candidate_index - 1
 	if remaining_candidates < 0:
@@ -314,6 +319,10 @@ func _show_event_popup(event: Dictionary) -> void:
 			var flag_key: String = choice_data.get("flag", "")
 			if flag_key != "":
 				GameManager.set_flag(flag_key, choice_data.get("value", true))
+			# Moral dilemma events cause stress
+			if choice_data.has("flag"):
+				GameManager.add_stress(GameManager.STRESS_FROM_MORAL_DILEMMA)
+				EventBus.stress_changed.emit(GameManager.stress)
 			EventBus.event_choice_made.emit(ev_id, i)
 			# Fade out popup
 			var close_tween: Tween = create_tween()
@@ -371,6 +380,11 @@ func _on_stamp_decision(hired: bool) -> void:
 
 	stamp_area.show_result(correct, reason)
 	booth_view.show_reaction(hired)
+
+	# Add stress from violations
+	if not correct:
+		GameManager.add_stress(GameManager.STRESS_PER_VIOLATION)
+		EventBus.stress_changed.emit(GameManager.stress)
 
 	# Wait, then walk out and present next
 	await get_tree().create_timer(2.0).timeout
@@ -552,7 +566,8 @@ func _show_interrogation_popup(question: String, response: String, is_guilty: bo
 			EventBus.money_changed.emit(GameManager.money)
 		else:
 			# Falsely accused an innocent candidate
-			GameManager.add_stress(0.05)
+			GameManager.add_stress(GameManager.STRESS_PER_WRONG_ACCUSATION)
+			EventBus.stress_changed.emit(GameManager.stress)
 		EventBus.interrogation_resolved.emit(is_guilty, player_correct)
 		var close_tween: Tween = create_tween()
 		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
@@ -650,6 +665,7 @@ func _show_phone_call(call_data: Dictionary) -> void:
 			GameManager.set_flag(flag)
 		EventBus.phone_answered.emit(call_data)
 		GameManager.add_stress(0.03)
+		EventBus.stress_changed.emit(GameManager.stress)
 		var close_tween: Tween = create_tween()
 		close_tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
 		close_tween.tween_callback(func() -> void: overlay.queue_free())

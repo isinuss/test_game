@@ -28,10 +28,20 @@ extends Resource
 @export var reference_company: String = ""
 @export var reference_quality: String = "good"  # excellent/good/suspicious/fake
 
+# Background check documents
+@export var has_criminal_record: bool = false
+@export var criminal_record_clean: bool = true
+@export var has_health_report: bool = false
+@export var health_report_fit: bool = true
+
 # Special flags
 @export var has_disability: bool = false
 @export var is_ceo_nephew: bool = false
 @export var is_union_candidate: bool = false
+@export var is_returning_candidate: bool = false
+@export var is_journalist: bool = false
+@export var is_spy: bool = false
+@export var original_candidate_name: String = ""
 
 # Documents
 @export var documents: Array[Resource] = []
