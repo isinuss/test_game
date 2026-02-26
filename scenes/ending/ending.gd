@@ -32,12 +32,22 @@ func _show_ending() -> void:
 	match ending_id:
 		"fired":
 			title_label.add_theme_color_override("font_color", Color(0.9, 0.2, 0.1))
+		"hero":
+			title_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 		"whistleblower":
 			title_label.add_theme_color_override("font_color", Color(0.3, 0.75, 0.9))
+		"reformer":
+			title_label.add_theme_color_override("font_color", Color(0.2, 0.8, 0.7))
+		"double_agent":
+			title_label.add_theme_color_override("font_color", Color(0.6, 0.3, 0.8))
 		"corrupt":
 			title_label.add_theme_color_override("font_color", Color(0.6, 0.5, 0.2))
+		"exile":
+			title_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.52))
 		"promoted":
 			title_label.add_theme_color_override("font_color", Color(0.4, 0.8, 0.3))
+		"vanished":
+			title_label.add_theme_color_override("font_color", Color(0.15, 0.15, 0.18))
 		_:
 			title_label.add_theme_color_override("font_color", Color(0.7, 0.67, 0.6))
 

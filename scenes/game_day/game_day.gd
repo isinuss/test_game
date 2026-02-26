@@ -68,37 +68,170 @@ func _insert_event_candidates() -> void:
 	for event_id: String in config.get("events", []):
 		match event_id:
 			"ceo_nephew":
-				# Insert CEO's nephew as candidate 2 (index 1)
-				var nephew: CandidateData = CandidatePool.generate_candidate(
-					GameManager.current_day * 10000 + 99, GameManager.current_day
-				)
-				nephew.candidate_name = "Selim Patronoğlu"
-				nephew.is_ceo_nephew = true
-				nephew.experience_years = 1
-				nephew.special_event_id = "ceo_nephew"
-				nephew.greeting = "Merhaba. CEO'nun yeğeniyim. Sanırım beni bekliyordunuz."
-				nephew.reaction_hired = "Beklenen buydu zaten. Dayıma selamlar."
-				nephew.reaction_rejected = "Ciddi misiniz? Dayım bunu duyunca..."
-				nephew.interview_lines = [
-					"Aslında pek deneyimim yok ama öğrenmeye açığım.",
-					"Dayımın şirketinde staj yaptım... sayılır.",
-				]
-				# Update documents
-				nephew.documents.clear()
-				CandidatePool._generate_documents(nephew)
-				nephew.documents[0].content["Deneyim"] = "1 yıl"
-				# Nephew is NOT a valid hire by directive rules (< 3 years exp)
-				nephew.is_valid_hire = false
-				nephew.rejection_reasons = ["3 yıldan az deneyim"]
-				if GameManager.candidates_today.size() > 1:
-					GameManager.candidates_today.insert(1, nephew)
-				else:
-					GameManager.candidates_today.append(nephew)
+				_insert_ceo_nephew()
+			"returning_candidate":
+				_insert_returning_candidate()
+			"journalist_visit":
+				_insert_journalist()
+			"double_agent":
+				_insert_spy()
+			"ghost_employees":
+				_insert_ghost_employee()
+			"confrontation":
+				_insert_nephew_return()
+
+func _insert_ceo_nephew() -> void:
+	var nephew: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 99, GameManager.current_day
+	)
+	nephew.candidate_name = "Selim Patronoğlu"
+	nephew.is_ceo_nephew = true
+	nephew.experience_years = 1
+	nephew.special_event_id = "ceo_nephew"
+	nephew.greeting = "Merhaba. CEO'nun yeğeniyim. Sanırım beni bekliyordunuz."
+	nephew.reaction_hired = "Beklenen buydu zaten. Dayıma selamlar."
+	nephew.reaction_rejected = "Ciddi misiniz? Dayım bunu duyunca..."
+	nephew.interview_lines = [
+		"Aslında pek deneyimim yok ama öğrenmeye açığım.",
+		"Dayımın şirketinde staj yaptım... sayılır.",
+	]
+	nephew.documents.clear()
+	CandidatePool._generate_documents(nephew)
+	nephew.documents[0].content["Deneyim"] = "1 yıl"
+	nephew.is_valid_hire = false
+	nephew.rejection_reasons = ["3 yıldan az deneyim"]
+	if GameManager.candidates_today.size() > 1:
+		GameManager.candidates_today.insert(1, nephew)
+	else:
+		GameManager.candidates_today.append(nephew)
+
+func _insert_returning_candidate() -> void:
+	# A candidate from Week 1 returns with different documents
+	var returner: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 77, GameManager.current_day
+	)
+	returner.is_returning_candidate = true
+	returner.special_event_id = "returning_candidate"
+	returner.greeting = "Merhaba... Daha önce de gelmiştim ama bu sefer belgelerim tamam."
+	returner.reaction_hired = "Sonunda! İkinci şans her zaman işe yarıyor."
+	returner.reaction_rejected = "Yine mi? Artık umudumu kaybediyorum..."
+	returner.interview_lines = [
+		"Geçen seferki eksiklerimi tamamladım.",
+		"Yeni bir sertifika aldım, bakabilirsiniz.",
+		"Bu sefer her şey eksiksiz, söz veriyorum.",
+	]
+	# This candidate might have forged documents — 50% chance
+	if randi() % 2 == 0:
+		CandidatePool.inject_inconsistency(returner, "name_mismatch")
+		returner.is_valid_hire = false
+		returner.rejection_reasons.append("Belge tutarsızlığı")
+	if GameManager.candidates_today.size() > 1:
+		GameManager.candidates_today.insert(1, returner)
+	else:
+		GameManager.candidates_today.append(returner)
+
+func _insert_journalist() -> void:
+	var journalist: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 88, GameManager.current_day
+	)
+	journalist.candidate_name = "Elif Korkmaz"
+	journalist.is_journalist = true
+	journalist.special_event_id = "journalist_visit"
+	journalist.greeting = "Merhaba, iş başvurusu için geldim. Güzel bir şirketmiş."
+	journalist.reaction_hired = "Harika, çok teşekkürler! İçeriden görmek istiyordum."
+	journalist.reaction_rejected = "Anlıyorum... Peki, şirket hakkında ne düşünüyorsunuz?"
+	journalist.interview_lines = [
+		"Şirketin çalışma kültürü hakkında çok şey duydum.",
+		"Önceki İK'cı neden ayrıldı, biliyor musunuz?",
+		"Burada çalışanlar mutlu mu sizce?",
+	]
+	journalist.documents.clear()
+	CandidatePool._generate_documents(journalist)
+	journalist.is_valid_hire = true  # Technically qualified
+	# Insert at a random middle position
+	var pos: int = mini(2, GameManager.candidates_today.size())
+	GameManager.candidates_today.insert(pos, journalist)
+
+func _insert_spy() -> void:
+	var spy: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 55, GameManager.current_day
+	)
+	spy.is_spy = true
+	spy.special_event_id = "double_agent"
+	spy.greeting = "İyi günler. Başvurumu çok özenle hazırladım."
+	spy.reaction_hired = "Mükemmel. Hemen başlayabilirim."
+	spy.reaction_rejected = "Anlıyorum. Belki başka bir departmanda..."
+	spy.interview_lines = [
+		"Şirketinizin organizasyon yapısı çok ilgimi çekiyor.",
+		"İK süreçleriniz hakkında detaylı bilgi alabilir miyim?",
+		"Rakip firmaların ne yaptığını biliyorum, size avantaj sağlarım.",
+	]
+	# Perfect documents — too perfect
+	spy.experience_years = 8
+	spy.gpa = 3.90
+	spy.documents.clear()
+	CandidatePool._generate_documents(spy)
+	spy.documents[0].content["Deneyim"] = "8 yıl"
+	spy.is_valid_hire = true
+	if GameManager.candidates_today.size() > 3:
+		GameManager.candidates_today.insert(3, spy)
+	else:
+		GameManager.candidates_today.append(spy)
+
+func _insert_ghost_employee() -> void:
+	var ghost: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 33, GameManager.current_day
+	)
+	ghost.special_event_id = "ghost_employees"
+	ghost.greeting = "Merhaba, başvurumu yaptım."
+	ghost.reaction_hired = "Teşekkürler... Aslında burada zaten çalışıyormuşum galiba?"
+	ghost.reaction_rejected = "Anladım..."
+	ghost.interview_lines = [
+		"Bu pozisyon bana çok uygun.",
+		"Daha önce burada çalışmadım... sanırım.",
+	]
+	ghost.documents.clear()
+	CandidatePool._generate_documents(ghost)
+	ghost.is_valid_hire = false
+	ghost.rejection_reasons.append("Sistemde zaten kayıtlı — hayalet çalışan")
+	if GameManager.candidates_today.size() > 2:
+		GameManager.candidates_today.insert(2, ghost)
+	else:
+		GameManager.candidates_today.append(ghost)
+
+func _insert_nephew_return() -> void:
+	# CEO's nephew returns on Day 14 — not as candidate but triggers event
+	var nephew_return: CandidateData = CandidatePool.generate_candidate(
+		GameManager.current_day * 10000 + 99, GameManager.current_day
+	)
+	nephew_return.candidate_name = "Selim Patronoğlu"
+	nephew_return.is_ceo_nephew = true
+	nephew_return.special_event_id = "confrontation"
+	if GameManager.has_flag("accepted_nepotism"):
+		nephew_return.greeting = "Merhaba yine. Beni hatırlarsın. Artık senin üstünüm."
+	else:
+		nephew_return.greeting = "Beni reddettin. Ama yine buradayım. Karma."
+	nephew_return.reaction_hired = "Doğal olarak."
+	nephew_return.reaction_rejected = "Bu sefer sonuçları farklı olacak."
+	nephew_return.interview_lines = [
+		"Yeni yönetim beni buraya atadı.",
+		"İK'yı yeniden yapılandıracağız.",
+	]
+	nephew_return.documents.clear()
+	CandidatePool._generate_documents(nephew_return)
+	nephew_return.is_valid_hire = false
+	nephew_return.rejection_reasons = ["Özel aday — olay tetikleyici"]
+	GameManager.candidates_today.insert(0, nephew_return)
 
 func _check_day_start_events() -> void:
 	var config: Dictionary = GameManager.get_day_config()
 	for event_id: String in config.get("events", []):
-		var event: Dictionary = EventPool.get_event(event_id)
+		# Use conditional variant for events that branch based on prior flags
+		var event: Dictionary
+		if event_id in ["informant_return", "confrontation", "ally_or_enemy"]:
+			event = EventPool.get_event_conditional(event_id, GameManager.flags)
+		else:
+			event = EventPool.get_event(event_id)
 		if event.get("trigger", "") == "day_start" and event.get("blocking", false):
 			_show_event_popup(event)
 
@@ -208,7 +341,11 @@ func _present_next_candidate() -> void:
 func _check_candidate_events() -> void:
 	var config: Dictionary = GameManager.get_day_config()
 	for event_id: String in config.get("events", []):
-		var event: Dictionary = EventPool.get_event(event_id)
+		var event: Dictionary
+		if event_id in ["informant_return", "confrontation", "ally_or_enemy"]:
+			event = EventPool.get_event_conditional(event_id, GameManager.flags)
+		else:
+			event = EventPool.get_event(event_id)
 		var trigger: String = event.get("trigger", "")
 		if trigger.begins_with("candidate_"):
 			var trigger_idx: int = trigger.split("_")[1].to_int() - 1
@@ -251,7 +388,11 @@ func _check_day_end_events() -> void:
 	if GameManager.current_candidate_index >= GameManager.candidates_today.size() - 1:
 		var config: Dictionary = GameManager.get_day_config()
 		for event_id: String in config.get("events", []):
-			var event: Dictionary = EventPool.get_event(event_id)
+			var event: Dictionary
+			if event_id in ["informant_return", "confrontation", "ally_or_enemy"]:
+				event = EventPool.get_event_conditional(event_id, GameManager.flags)
+			else:
+				event = EventPool.get_event(event_id)
 			if event.get("trigger", "") == "day_end":
 				_show_event_popup(event)
 

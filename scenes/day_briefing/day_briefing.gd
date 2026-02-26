@@ -66,11 +66,24 @@ func _populate() -> void:
 	# === MEMO — typewriter effect ===
 	var full_memo: String = ""
 	match GameManager.current_day:
+		# Week 1
 		1: full_memo = "Yönetimden: \"Hoş geldiniz. Bugün ilk gününüz. Kuralları okuyun ve doğru kararlar verin.\""
 		2: full_memo = "Yönetimden: \"Bütçe kısıtlaması var. Mühendislik alımları durduruldu.\""
 		3: full_memo = "Yönetimden: \"Bugün önemli misafirlerimiz olabilir. Dikkatli olun.\""
 		4: full_memo = "Yönetimden: \"Sendika baskısı artıyor ama bütçe de yok. Kuralları takip edin.\""
-		5: full_memo = "Yönetimden: \"Soruşturma başladı. Her şeyi kayıt altına alın.\""
+		5: full_memo = "Yönetimden: \"Bu hafta denetçiler gelebilir. Kayıtlarınızı düzenli tutun.\""
+		# Week 2
+		6: full_memo = "Yönetimden: \"Yeni İK politikası yürürlükte. Genelgeyi okudum, uygulamanızı bekliyorum.\""
+		7: full_memo = "Yönetimden: \"Cinsiyet dengesi önemli. Eşit sayıda alım yapılmalı.\""
+		8: full_memo = "Yönetimden: \"Güvenlik uyarısı: binaya yetkisiz kişiler girmiş olabilir. Dikkatli olun.\""
+		9: full_memo = "CEO'dan: \"Sizi bugün görmek istiyorum. Önemli bir konu var.\""
+		10: full_memo = "Denetçiden: \"Bugün denetim günü. Tüm kararlarınız kayıt altında. Sıfır hata bekliyorum.\""
+		# Week 3
+		11: full_memo = "Yeni Yönetimden: \"Eski kurallar geçersiz. Bundan sonra bizim kurallarımız geçerli.\""
+		12: full_memo = "Yönetimden: \"Sistemde anormallikler tespit edildi. Tüm referansları doğrulayın.\""
+		13: full_memo = "Savcılıktan: \"İşe alım kayıtlarınızla ilgili bilgi talep ediyoruz. Tam işbirliği bekleniyor.\""
+		14: full_memo = "Yönetimden: \"Yerinize birini seçmeniz gerekiyor. Bu son mülakatlarınız olabilir.\""
+		15: full_memo = "Kimsedenlik: \"Artık direktif yok. Bugün kararlar sizin. Son gününüz.\""
 
 	memo_label.text = ""
 	var memo_tween: Tween = create_tween()

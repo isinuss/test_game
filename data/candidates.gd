@@ -493,6 +493,35 @@ static func _ensure_directive_compliance(c: CandidateData, directives: Array[Str
 					c.documents[0].content["Bölüm"] = c.department
 					if c.documents.size() > 1:
 						c.documents[1].content["Bölüm"] = c.department
+			"age_limit_40":
+				if c.age > 40:
+					c.age = randi_range(25, 39)
+					c.documents[0].content["Yaş"] = str(c.age)
+					# Update ID card birth year
+					for doc: Resource in c.documents:
+						if doc.doc_type == "id_card":
+							doc.content["Doğum Yılı"] = str(2026 - c.age)
+			"no_over_30":
+				if c.age > 30:
+					c.age = randi_range(22, 29)
+					c.documents[0].content["Yaş"] = str(c.age)
+					for doc: Resource in c.documents:
+						if doc.doc_type == "id_card":
+							doc.content["Doğum Yılı"] = str(2026 - c.age)
+			"background_check":
+				if not c.has_reference:
+					c.has_reference = true
+					var ref_first: String = MALE_NAMES[randi() % MALE_NAMES.size()]
+					c.reference_author = ref_first + " " + SURNAMES[randi() % SURNAMES.size()]
+					c.reference_company = COMPANIES[randi() % COMPANIES.size()]
+					c.reference_quality = "good"
+					# Regenerate documents to include reference
+					c.documents.clear()
+					_generate_documents(c)
+			"verify_all_references":
+				pass  # Doesn't change validity, just requires careful checking
+			"gender_balance":
+				pass  # Handled at generation level
 			"disability_quota":
 				pass  # Handled specially
 			"no_hiring":
@@ -501,12 +530,28 @@ static func _ensure_directive_compliance(c: CandidateData, directives: Array[Str
 				pass  # Special candidate
 			"report_suspicious":
 				pass  # Doesn't affect validity
+			"no_criminal_record":
+				pass  # Reporting directive
+			"priority_hire_list":
+				pass  # Special candidate list
+			"loyalty_test":
+				pass  # Special question directive
+			"perfect_compliance":
+				pass  # Meta-directive, no candidate changes
+			"political_hire":
+				pass  # Special candidate
+			"emergency_freeze":
+				pass  # Handled at scoring level
+			"hire_replacement":
+				pass  # Meta-directive
+			"final_directive":
+				pass  # No restrictions
 
 static func _apply_directive_violation(c: CandidateData, directives: Array[String]) -> void:
 	# Pick one directive to violate
 	var violatable: Array[String] = []
 	for d: String in directives:
-		if d in ["min_experience_3", "no_engineering"]:
+		if d in ["min_experience_3", "no_engineering", "age_limit_40", "no_over_30", "background_check"]:
 			violatable.append(d)
 
 	if violatable.is_empty():
@@ -528,3 +573,26 @@ static func _apply_directive_violation(c: CandidateData, directives: Array[Strin
 			if c.documents.size() > 1:
 				c.documents[1].content["Bölüm"] = c.department
 			c.rejection_reasons.append("Mühendislik bölümü — alım durduruldu")
+		"age_limit_40":
+			c.age = randi_range(41, 55)
+			c.documents[0].content["Yaş"] = str(c.age)
+			for doc: Resource in c.documents:
+				if doc.doc_type == "id_card":
+					doc.content["Doğum Yılı"] = str(2026 - c.age)
+			c.rejection_reasons.append("40 yaş üstü — yaş sınırı aşıldı")
+		"no_over_30":
+			c.age = randi_range(31, 48)
+			c.documents[0].content["Yaş"] = str(c.age)
+			for doc: Resource in c.documents:
+				if doc.doc_type == "id_card":
+					doc.content["Doğum Yılı"] = str(2026 - c.age)
+			c.rejection_reasons.append("30 yaş üstü — genç kan politikası")
+		"background_check":
+			c.has_reference = false
+			# Remove reference document if exists
+			var new_docs: Array[Resource] = []
+			for doc: Resource in c.documents:
+				if doc.doc_type != "reference":
+					new_docs.append(doc)
+			c.documents = new_docs
+			c.rejection_reasons.append("Referans mektubu yok")
