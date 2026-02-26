@@ -84,10 +84,10 @@ func _populate() -> void:
 	if auto_rejected > 0:
 		summary_text += "Zaman doldu — %d aday otomatik reddedildi\n" % auto_rejected
 	summary_text += "Bugünkü ihlaller: %d\n" % violations_today
-	summary_text += "Toplam ihlal: %d / 3\n" % total_violations
+	summary_text += "Toplam ihlal: %d / %d\n" % [total_violations, GameManager.max_violations]
 	summary_text += "Toplam para: ₺%d\n" % money
 
-	if total_violations >= 3:
+	if total_violations >= GameManager.max_violations:
 		summary_text += "\n⚠ ÇOK FAZLA İHLAL — KOVULDUNUZ!"
 
 	summary_label.text = summary_text

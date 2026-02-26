@@ -41,7 +41,7 @@ func load_directives(day: int) -> void:
 
 func _update_stats() -> void:
 	money_label.text = "PARA: ₺%d" % GameManager.money
-	violations_label.text = "İHLAL: %d/3" % GameManager.violations
+	violations_label.text = "İHLAL: %d/%d" % [GameManager.violations, GameManager.max_violations]
 
 func _on_money_changed(_amount: int) -> void:
 	var gained: bool = GameManager.money > _prev_money
