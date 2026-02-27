@@ -19,7 +19,7 @@ func _populate() -> void:
 	var day: int = summary.get("day", GameManager.current_day)
 
 	# Title with typewriter
-	var full_title: String = "GÜN %d — RAPOR" % day
+	var full_title: String = LocaleManager.t("summary.title") % day
 	title_label.text = ""
 	var title_tween: Tween = create_tween()
 	title_tween.tween_interval(0.3)
@@ -38,7 +38,7 @@ func _populate() -> void:
 			continue
 		var d: Dictionary = decision
 		var candidate: Variant = d.get("candidate", null)
-		var candidate_name: String = "Bilinmeyen"
+		var candidate_name: String = LocaleManager.t("summary.unknown")
 		if candidate is CandidateData:
 			candidate_name = (candidate as CandidateData).candidate_name
 
@@ -48,8 +48,8 @@ func _populate() -> void:
 		var reason: String = d.get("reason", "")
 
 		var lbl: Label = Label.new()
-		var status_text: String = "İŞE ALINDI" if hired else "REDDEDİLDİ"
-		var result_text: String = "✓" if correct else "✗ İHLAL"
+		var status_text: String = LocaleManager.t("summary.hired") if hired else LocaleManager.t("summary.rejected")
+		var result_text: String = LocaleManager.t("summary.correct") if correct else LocaleManager.t("summary.violation")
 		lbl.text = "%s — %s %s" % [candidate_name, status_text, result_text]
 
 		if violation:
@@ -80,15 +80,15 @@ func _populate() -> void:
 	var auto_rejected: int = summary.get("auto_rejected", 0)
 
 	var summary_text: String = "\n"
-	summary_text += "İncelenen: %d / %d aday\n" % [reviewed, total]
+	summary_text += (LocaleManager.t("summary.reviewed") % [reviewed, total]) + "\n"
 	if auto_rejected > 0:
-		summary_text += "Zaman doldu — %d aday otomatik reddedildi\n" % auto_rejected
-	summary_text += "Bugünkü ihlaller: %d\n" % violations_today
-	summary_text += "Toplam ihlal: %d / %d\n" % [total_violations, GameManager.max_violations]
-	summary_text += "Toplam para: ₺%d\n" % money
+		summary_text += (LocaleManager.t("summary.auto_rejected") % auto_rejected) + "\n"
+	summary_text += (LocaleManager.t("summary.violations_today") % violations_today) + "\n"
+	summary_text += (LocaleManager.t("summary.total_violations") % [total_violations, GameManager.max_violations]) + "\n"
+	summary_text += (LocaleManager.t("summary.total_money") % money) + "\n"
 
 	if total_violations >= GameManager.max_violations:
-		summary_text += "\n⚠ ÇOK FAZLA İHLAL — KOVULDUNUZ!"
+		summary_text += LocaleManager.t("summary.fired_warning")
 
 	summary_label.text = summary_text
 
@@ -109,9 +109,9 @@ func _populate() -> void:
 	)
 
 	if GameManager.violations >= GameManager.max_violations or GameManager.current_day >= GameManager.max_days:
-		continue_button.text = "SONUÇ"
+		continue_button.text = LocaleManager.t("ui.result")
 	else:
-		continue_button.text = "SONRAKİ GÜN →"
+		continue_button.text = LocaleManager.t("ui.continue")
 
 func _on_continue() -> void:
 	continue_button.disabled = true

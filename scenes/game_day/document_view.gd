@@ -15,14 +15,20 @@ var _stress_time: float = 0.0
 var _content_panel_base_pos: Vector2 = Vector2.ZERO
 var _blur_timer: float = 0.0
 
-const DOC_TYPE_NAMES: Dictionary = {
-	"cv": "ÖZGEÇMİŞ",
-	"diploma": "DİPLOMA",
-	"reference": "REFERANS",
-	"id_card": "KİMLİK",
-	"criminal_record": "SABIKA KAYDI",
-	"health_report": "SAĞLIK RAPORU",
+const DOC_TYPE_KEYS: Dictionary = {
+	"cv": "doc.cv",
+	"diploma": "doc.diploma",
+	"reference": "doc.reference",
+	"id_card": "doc.id_card",
+	"criminal_record": "doc.criminal_record",
+	"health_report": "doc.health_report",
 }
+
+func _get_doc_type_name(doc_type: String) -> String:
+	var key: String = DOC_TYPE_KEYS.get(doc_type, "")
+	if key != "":
+		return LocaleManager.t(key)
+	return doc_type
 
 func _ready() -> void:
 	content_panel.visible = false
@@ -72,7 +78,7 @@ func load_documents(documents: Array[Resource]) -> void:
 		if doc == null:
 			continue
 		var btn: Button = Button.new()
-		btn.text = DOC_TYPE_NAMES.get(doc.doc_type, doc.doc_type)
+		btn.text = _get_doc_type_name(doc.doc_type)
 		btn.custom_minimum_size = Vector2(90, 28)
 		btn.add_theme_font_size_override("font_size", 11)
 		var idx: int = i
@@ -109,7 +115,7 @@ func _show_document(index: int) -> void:
 	if doc == null:
 		return
 
-	doc_title_label.text = DOC_TYPE_NAMES.get(doc.doc_type, doc.doc_type)
+	doc_title_label.text = _get_doc_type_name(doc.doc_type)
 
 	# Build content with BBCode
 	var text: String = ""
@@ -195,7 +201,7 @@ func _format_cv(doc: DocumentData, doc_index: int) -> String:
 	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "═══════════════════════\n"
-	t += "     ÖZGEÇMİŞ\n"
+	t += "     " + LocaleManager.t("doc.cv") + "\n"
 	t += "═══════════════════════\n\n"
 	for key: String in doc.content:
 		var val: String = str(doc.content[key])
@@ -207,7 +213,7 @@ func _format_diploma(doc: DocumentData, doc_index: int) -> String:
 	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "╔═══════════════════════╗\n"
-	t += "║      DİPLOMA          ║\n"
+	t += "║      " + LocaleManager.t("doc.diploma") + "          ║\n"
 	t += "╚═══════════════════════╝\n\n"
 	var uni: String = _suspicious_field("Üniversite", doc.content.get("Üniversite", ""), doc, doc_index, affected)
 	t += "  " + uni + "\n"
@@ -219,27 +225,27 @@ func _format_diploma(doc: DocumentData, doc_index: int) -> String:
 	t += "  Yıl: " + year_val + "\n"
 	var gpa_val: String = _suspicious_field("Not Ortalaması", str(doc.content.get("Not Ortalaması", "")), doc, doc_index, affected)
 	t += "  GNO: " + gpa_val + "\n"
-	t += "\n         [MÜHÜR]\n"
+	t += "\n         " + LocaleManager.t("doc.seal") + "\n"
 	return t
 
 func _format_reference(doc: DocumentData, doc_index: int) -> String:
 	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
-	t += "───── REFERANS MEKTUBU ─────\n\n"
-	t += "Kimden: " + doc.content.get("Referans Veren", "") + "\n"
+	t += LocaleManager.t("doc.reference_header") + "\n\n"
+	t += LocaleManager.t("doc.from") + doc.content.get("Referans Veren", "") + "\n"
 	var company_val: String = _suspicious_field("Şirket", doc.content.get("Şirket", ""), doc, doc_index, affected)
-	t += "Şirket: " + company_val + "\n"
+	t += LocaleManager.t("doc.company") + company_val + "\n"
 	t += "─────────────────────────\n\n"
 	t += doc.content.get("Değerlendirme", "") + "\n"
 	t += "\n─────────────────────────\n"
-	t += "İmza: " + doc.content.get("Referans Veren", "") + "\n"
+	t += LocaleManager.t("doc.signature_prefix") + doc.content.get("Referans Veren", "") + "\n"
 	return t
 
 func _format_id_card(doc: DocumentData, doc_index: int) -> String:
 	var affected: Array[String] = _get_affected_keys(doc.inconsistency_type) if doc.has_inconsistency else []
 	var t: String = ""
 	t += "┌─────────────────────┐\n"
-	t += "│  T.C. KİMLİK KARTI  │\n"
+	t += "│  " + LocaleManager.t("doc.id_card_header") + "  │\n"
 	t += "├─────────────────────┤\n"
 	t += "│                     │\n"
 	var tc_val: String = _suspicious_field("TC Kimlik No", doc.content.get("TC Kimlik No", ""), doc, doc_index, affected)
@@ -256,7 +262,7 @@ func _format_id_card(doc: DocumentData, doc_index: int) -> String:
 func _format_criminal_record(doc: DocumentData, doc_index: int) -> String:
 	var t: String = ""
 	t += "┌─────────────────────────┐\n"
-	t += "│    SABIKA KAYDI         │\n"
+	t += "│    " + LocaleManager.t("doc.criminal_record") + "         │\n"
 	t += "├─────────────────────────┤\n"
 	t += "│                         │\n"
 	t += "│  TC No: " + doc.content.get("TC Kimlik No", "") + "\n"
@@ -270,14 +276,14 @@ func _format_criminal_record(doc: DocumentData, doc_index: int) -> String:
 func _format_health_report(doc: DocumentData, doc_index: int) -> String:
 	var t: String = ""
 	t += "╔═════════════════════════╗\n"
-	t += "║    SAĞLIK RAPORU        ║\n"
+	t += "║    " + LocaleManager.t("doc.health_report") + "        ║\n"
 	t += "╚═════════════════════════╝\n\n"
 	t += "  Ad: " + doc.content.get("Ad Soyad", "") + "\n"
 	t += "  Durum: " + doc.content.get("Durum", "Sağlıklı") + "\n"
 	if doc.content.has("Engellilik Oranı"):
 		t += "  Engellilik: %" + str(doc.content.get("Engellilik Oranı", "0")) + "\n"
 	t += "  Tarih: " + doc.content.get("Tarih", "") + "\n"
-	t += "\n  [DOKTOR İMZASI]\n"
+	t += "\n  " + LocaleManager.t("doc.doctor_signature") + "\n"
 	return t
 
 func clear_documents() -> void:

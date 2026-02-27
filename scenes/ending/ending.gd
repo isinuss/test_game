@@ -16,7 +16,7 @@ func _show_ending() -> void:
 	var ending: Dictionary = GameManager.get_ending()
 
 	# Title — dramatic fade in with scale
-	var full_title: String = ending.get("title", "SON")
+	var full_title: String = ending.get("title", LocaleManager.t("ending.default_title"))
 	title_label.text = full_title
 	title_label.modulate.a = 0.0
 	title_label.pivot_offset = Vector2(title_label.size.x / 2.0, title_label.size.y / 2.0)

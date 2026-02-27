@@ -46,8 +46,8 @@ func load_directives(day: int) -> void:
 	_update_stats()
 
 func _update_stats() -> void:
-	money_label.text = "PARA: ₺%d" % GameManager.money
-	violations_label.text = "İHLAL: %d/%d" % [GameManager.violations, GameManager.max_violations]
+	money_label.text = LocaleManager.t("status.money") % GameManager.money
+	violations_label.text = LocaleManager.t("status.violations") % [GameManager.violations, GameManager.max_violations]
 
 func _on_money_changed(_amount: int) -> void:
 	var gained: bool = GameManager.money > _prev_money
@@ -80,7 +80,7 @@ func _on_violation(_reason: String) -> void:
 func _create_stress_bar() -> void:
 	# Dynamically add stress bar below violations label
 	_stress_label = Label.new()
-	_stress_label.text = "STRES"
+	_stress_label.text = LocaleManager.t("status.stress")
 	_stress_label.add_theme_font_size_override("font_size", 10)
 	_stress_label.add_theme_color_override("font_color", Color(0.7, 0.65, 0.55))
 	violations_label.add_sibling(_stress_label)

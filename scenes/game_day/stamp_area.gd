@@ -21,7 +21,7 @@ func set_buttons_enabled(enabled: bool) -> void:
 	hire_button.disabled = not enabled
 	reject_button.disabled = not enabled
 	if enabled:
-		status_label.text = "Karar bekleniyor..."
+		status_label.text = LocaleManager.t("stamp.waiting")
 		status_label.add_theme_color_override("font_color", Color(0.6, 0.58, 0.5))
 		# Subtle pulse to draw attention
 		_pulse_buttons()
@@ -41,11 +41,11 @@ func _on_hire() -> void:
 	var delay: float = 0.0
 	if GameManager.stress >= 0.7:
 		delay = 0.3 + (GameManager.stress - 0.7) * 1.0  # 0.3s to 0.6s
-		status_label.text = "..."
+		status_label.text = LocaleManager.t("stamp.hesitation")
 	if delay > 0.0:
 		await get_tree().create_timer(delay).timeout
 	_play_stamp_animation(hire_button)
-	status_label.text = "İŞE ALINDI"
+	status_label.text = LocaleManager.t("stamp.hired")
 	status_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.2))
 	_show_stamp_overlay(true)
 	_screen_shake(4.0, 0.15)
@@ -59,11 +59,11 @@ func _on_reject() -> void:
 	var delay: float = 0.0
 	if GameManager.stress >= 0.7:
 		delay = 0.3 + (GameManager.stress - 0.7) * 1.0
-		status_label.text = "..."
+		status_label.text = LocaleManager.t("stamp.hesitation")
 	if delay > 0.0:
 		await get_tree().create_timer(delay).timeout
 	_play_stamp_animation(reject_button)
-	status_label.text = "REDDEDİLDİ"
+	status_label.text = LocaleManager.t("stamp.rejected")
 	status_label.add_theme_color_override("font_color", Color(0.7, 0.15, 0.1))
 	_show_stamp_overlay(false)
 	_screen_shake(5.0, 0.18)
@@ -114,7 +114,7 @@ func _screen_shake(intensity: float, duration: float) -> void:
 
 func show_result(correct: bool, reason: String) -> void:
 	if not correct:
-		status_label.text += "\n⚠ İHLAL: " + reason
+		status_label.text += LocaleManager.t("stamp.violation_prefix") + reason
 		status_label.add_theme_color_override("font_color", Color(0.9, 0.3, 0.1))
 		# Intense flash for violation
 		var tween: Tween = create_tween()

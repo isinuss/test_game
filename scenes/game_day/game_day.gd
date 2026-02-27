@@ -434,7 +434,7 @@ func _on_interrogation_requested(inconsistency_type: String, detail: String, doc
 	if responses.is_empty():
 		return
 
-	var question: String = responses.get("question", "Bu belge hakkında bir açıklamanız var mı?")
+	var question: String = responses.get("question", LocaleManager.t("interrogation.default_question"))
 
 	# Determine if this candidate actually has this inconsistency (is guilty)
 	var is_guilty: bool = candidate.inconsistencies.size() > 0
@@ -442,9 +442,9 @@ func _on_interrogation_requested(inconsistency_type: String, detail: String, doc
 	# Pick a response
 	var response_pool: Array
 	if is_guilty:
-		response_pool = responses.get("guilty", ["Şey... açıklayabilirim."])
+		response_pool = responses.get("guilty", [LocaleManager.t("interrogation.default_guilty")])
 	else:
-		response_pool = responses.get("innocent", ["Her şey düzgün olmalı."])
+		response_pool = responses.get("innocent", [LocaleManager.t("interrogation.default_innocent")])
 	var response: String = response_pool[randi() % response_pool.size()]
 
 	_show_interrogation_popup(question, response, is_guilty, candidate)
@@ -490,7 +490,7 @@ func _show_interrogation_popup(question: String, response: String, is_guilty: bo
 
 	# Title
 	var title_lbl: Label = Label.new()
-	title_lbl.text = "SORGU"
+	title_lbl.text = LocaleManager.t("interrogation.title")
 	title_lbl.add_theme_font_size_override("font_size", 16)
 	title_lbl.add_theme_color_override("font_color", Color(0.9, 0.7, 0.2))
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -498,7 +498,7 @@ func _show_interrogation_popup(question: String, response: String, is_guilty: bo
 
 	# Your question
 	var q_lbl: Label = Label.new()
-	q_lbl.text = "Siz: \"" + question + "\""
+	q_lbl.text = LocaleManager.t("interrogation.you_prefix") + "\"" + question + "\""
 	q_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	q_lbl.add_theme_font_size_override("font_size", 11)
 	q_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
@@ -527,13 +527,13 @@ func _show_interrogation_popup(question: String, response: String, is_guilty: bo
 
 	# Player choices
 	var believe_btn: Button = Button.new()
-	believe_btn.text = "İnanıyorum — belgeler doğru"
+	believe_btn.text = LocaleManager.t("interrogation.believe")
 	believe_btn.custom_minimum_size = Vector2(0, 30)
 	believe_btn.modulate.a = 0.0
 	inner_vbox.add_child(believe_btn)
 
 	var suspect_btn: Button = Button.new()
-	suspect_btn.text = "Şüpheli — yalan söylüyor"
+	suspect_btn.text = LocaleManager.t("interrogation.suspect")
 	suspect_btn.custom_minimum_size = Vector2(0, 30)
 	suspect_btn.modulate.a = 0.0
 	inner_vbox.add_child(suspect_btn)
@@ -590,7 +590,7 @@ func _check_phone_calls() -> void:
 			_show_phone_call(call_data)
 
 func _show_phone_call(call_data: Dictionary) -> void:
-	var caller: String = call_data.get("caller", "Bilinmeyen")
+	var caller: String = call_data.get("caller", LocaleManager.t("phone.unknown_caller"))
 	var text: String = call_data.get("text", "")
 	var flag: String = call_data.get("flag", "")
 
@@ -638,7 +638,7 @@ func _show_phone_call(call_data: Dictionary) -> void:
 	margin.add_child(vbox)
 
 	var title_lbl: Label = Label.new()
-	title_lbl.text = "TELEFON — " + caller.to_upper()
+	title_lbl.text = LocaleManager.t("phone.title_prefix") + caller.to_upper()
 	title_lbl.add_theme_font_size_override("font_size", 14)
 	title_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 0.4))
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -651,12 +651,12 @@ func _show_phone_call(call_data: Dictionary) -> void:
 	vbox.add_child(text_lbl)
 
 	var answer_btn: Button = Button.new()
-	answer_btn.text = "Telefonu kapat"
+	answer_btn.text = LocaleManager.t("phone.hang_up")
 	answer_btn.custom_minimum_size = Vector2(0, 28)
 	vbox.add_child(answer_btn)
 
 	var ignore_btn: Button = Button.new()
-	ignore_btn.text = "Görmezden gel"
+	ignore_btn.text = LocaleManager.t("phone.ignore")
 	ignore_btn.custom_minimum_size = Vector2(0, 28)
 	vbox.add_child(ignore_btn)
 

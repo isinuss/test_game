@@ -157,10 +157,10 @@ func _process_clock(delta: float) -> void:
 	clock_hand_h.rotation = hour_angle
 
 func update_status(day: int, time_remaining: float, candidates_left: int, violations: int) -> void:
-	status_day.text = "GÜN: %d/%d" % [day, GameManager.max_days]
+	status_day.text = LocaleManager.t("status.day") % [day, GameManager.max_days]
 	var minutes: int = int(time_remaining) / 60
 	var seconds: int = int(time_remaining) % 60
-	status_time.text = "SAAT: %02d:%02d" % [minutes, seconds]
+	status_time.text = LocaleManager.t("status.time") % [minutes, seconds]
 	if time_remaining < 30.0:
 		status_time.add_theme_color_override("font_color", Color(0.9, 0.3, 0.1))
 		# Pulse effect when low time
@@ -169,8 +169,8 @@ func update_status(day: int, time_remaining: float, candidates_left: int, violat
 	else:
 		status_time.add_theme_color_override("font_color", Color(0.75, 0.72, 0.65))
 		status_time.modulate.a = 1.0
-	status_candidates.text = "KALAN: %d" % candidates_left
-	status_violations.text = "İHLAL: %d/%d" % [violations, GameManager.max_violations]
+	status_candidates.text = LocaleManager.t("status.remaining") % candidates_left
+	status_violations.text = LocaleManager.t("status.violations") % [violations, GameManager.max_violations]
 
 	# Violations flash red when high
 	if violations >= 2:

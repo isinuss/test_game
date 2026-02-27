@@ -7,6 +7,9 @@ extends Control
 @onready var title_label: Label = $VBox/Title
 @onready var subtitle_label: Label = $VBox/Subtitle
 @onready var footer_label: Label = $VBox/Footer
+@onready var language_button: Button = %LanguageButton
+
+const LOCALES: Array[String] = ["tr", "en"]
 
 var _title_flicker_timer: float = 0.0
 var _title_flicker_interval: float = 5.0
@@ -14,6 +17,10 @@ var _title_flicker_interval: float = 5.0
 func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	language_button.pressed.connect(_on_language_pressed)
+
+	# Apply localized text
+	_apply_locale()
 
 	# Initial state — everything hidden for reveal
 	title_label.modulate.a = 0.0
@@ -21,6 +28,7 @@ func _ready() -> void:
 	start_button.modulate.a = 0.0
 	quit_button.modulate.a = 0.0
 	footer_label.modulate.a = 0.0
+	language_button.modulate.a = 0.0
 
 	_animate_intro()
 
@@ -35,7 +43,7 @@ func _animate_intro() -> void:
 	title_tween.parallel().tween_property(title_label, "scale", Vector2.ONE, 0.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 	# Typewriter subtitle
-	var full_subtitle: String = "İnsan Kaynakları Simülasyonu"
+	var full_subtitle: String = LocaleManager.t("ui.subtitle")
 	var sub_tween: Tween = create_tween()
 	sub_tween.tween_interval(1.4)
 	subtitle_label.add_theme_color_override("font_color", Color(0.5, 0.47, 0.4, 1))
@@ -51,6 +59,7 @@ func _animate_intro() -> void:
 	btn_tween.tween_interval(2.6)
 	btn_tween.tween_property(start_button, "modulate:a", 1.0, 0.4)
 	btn_tween.tween_property(quit_button, "modulate:a", 1.0, 0.3)
+	btn_tween.tween_property(language_button, "modulate:a", 1.0, 0.3)
 
 	# Footer
 	var footer_tween: Tween = create_tween()
@@ -85,3 +94,15 @@ func _on_start_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
+
+func _on_language_pressed() -> void:
+	var current_idx: int = LOCALES.find(LocaleManager.get_locale())
+	var next_idx: int = (current_idx + 1) % LOCALES.size()
+	LocaleManager.load_locale(LOCALES[next_idx])
+	_apply_locale()
+
+func _apply_locale() -> void:
+	title_label.text = LocaleManager.t("ui.game_title")
+	start_button.text = LocaleManager.t("ui.start")
+	quit_button.text = LocaleManager.t("ui.quit")
+	footer_label.text = LocaleManager.t("ui.footer")
